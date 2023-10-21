@@ -47,3 +47,8 @@ dist/
 
 # Environment Variables
 .env
+
+# riao
+*.db.env
+
+database/**/.schema

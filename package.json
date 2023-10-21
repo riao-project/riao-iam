@@ -21,8 +21,13 @@
 		"script": "ts-node scripts",
 		"publish": "npm run script -- publish"
 	},
+	"dependencies": {
+		"@riao/dbal": "^1.1.2",
+		"@riao/mysql": "^1.1.1"
+	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
+		"@riao/cli": "^1.0.2",
 		"@types/jasmine": "^4.3.0",
 		"@types/node": "^18.11.9",
 		"@typescript-eslint/eslint-plugin": "^5.44.0",
