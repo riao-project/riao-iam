@@ -1,0 +1,12 @@
+version: '3.1'
+services:
+    mysql-8-0:
+        image: 'mysql:8.0.31'
+        container_name: 'riao-iam-mysql-8-0'
+        ports:
+            - '3307:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: 'rootpassword1234'
+            MYSQL_USER: 'riao_root'
+            MYSQL_PASSWORD: 'password1234'
+            MYSQL_DATABASE: 'db'
