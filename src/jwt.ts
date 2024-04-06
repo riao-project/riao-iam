@@ -2,28 +2,50 @@ import * as jwt from 'jsonwebtoken';
 
 import { AccessTokenPayload, TokenPayload } from './token';
 import { IamError } from './errors/error';
+import { Secret, SecretAlgorithm } from './secret';
+import { KeyPair, KeyPairAlgorithm } from './keypair';
+import { KeyObject } from 'crypto';
 
 export type JwtPayload = string | object | Buffer;
 
-export interface JwtOptions {
-	publicKey: string;
-	privateKey: string;
-}
+export type JwtSigningOptions = Secret | KeyPair;
+
+export type JwtOptions = JwtSigningOptions & {
+	expiresIn?: number | string;
+	notBefore?: number | string;
+};
 
 export class Jwt<TPayload extends JwtPayload = JwtPayload> {
-	protected publicKey = '';
-	protected privateKey = '';
+	protected publicKey: KeyObject;
+	protected privateKey: KeyObject;
+
+	protected expiresIn?: number | string;
+	protected notBefore?: number | string;
+	protected algorithm?: SecretAlgorithm | KeyPairAlgorithm;
 
 	public constructor(options: JwtOptions) {
+		let algorithm;
+
 		for (const option in options) {
-			this[option] = options[option];
+			const value = options[option];
+
+			if (option === 'secret') {
+				this.publicKey = value;
+				this.privateKey = value;
+			}
+			else {
+				this[option] = value;
+			}
 		}
+
+		this.algorithm = options.algorithm ?? algorithm;
 	}
 
 	protected tokenOptions(): jwt.SignOptions {
 		return {
-			expiresIn: '15m',
-			notBefore: 1,
+			expiresIn: this.expiresIn ?? '15m',
+			notBefore: this.notBefore ?? 1,
+			algorithm: this.algorithm,
 		};
 	}
 
