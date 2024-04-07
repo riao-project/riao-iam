@@ -150,8 +150,6 @@ describe('Authorization - Role Based', () => {
 			],
 		});
 
-		await maindb.buildSchema();
-
 		writer = await maindb.query.insertOne({
 			table: tables.users,
 			record: { email: 'writer@example.com' },
