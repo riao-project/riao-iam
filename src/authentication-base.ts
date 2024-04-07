@@ -7,29 +7,13 @@ import {
 	and,
 } from '@riao/dbal';
 import { AuthenticationError } from './errors/authentication-error';
+import { AuthBase, AuthOptions } from './auth';
 
-export interface AuthenticationOptions {
-	db: Database;
-	userTable?: string;
-}
+export type AuthenticationOptions = AuthOptions;
 
 export abstract class AuthenticationBase<
 	TUser extends DatabaseRecord = DatabaseRecord
-> {
-	protected db: Database;
-	protected userRepo: QueryRepository<TUser>;
-	protected userTable = 'users';
-
-	public constructor(options: AuthenticationOptions) {
-		for (const key in options) {
-			this[key] = options[key];
-		}
-
-		this.userRepo = this.db.getQueryRepository<TUser>({
-			table: this.userTable,
-		});
-	}
-
+> extends AuthBase<TUser> {
 	public async findActiveUser(query: SelectQuery<TUser>): Promise<TUser> {
 		const userWhere = this.userIsActive();
 
