@@ -49,7 +49,7 @@ export class RoleBasedAuthorization extends AuthorizationBase {
 				},
 			],
 			where: {
-				[`${this.userRoleTable}.user_id`]: lookup.user,
+				[`${this.userRoleTable}.user_id`]: lookup.userId,
 				[`${this.permissionTable}.action`]: lookup.action,
 				[`${this.permissionTable}.model`]: lookup.model,
 			},

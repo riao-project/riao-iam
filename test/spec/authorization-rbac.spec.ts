@@ -214,7 +214,7 @@ describe('Authorization - Role Based', () => {
 
 	it('a writer can create', async () => {
 		await authz.check({
-			user: writer.id,
+			userId: writer.id,
 			action: CrudActions.CREATE,
 			model: 'post',
 		});
@@ -222,7 +222,7 @@ describe('Authorization - Role Based', () => {
 
 	it('a writer can read', async () => {
 		await authz.check({
-			user: writer.id,
+			userId: writer.id,
 			action: CrudActions.READ,
 			model: 'post',
 		});
@@ -231,7 +231,7 @@ describe('Authorization - Role Based', () => {
 	it('a reader cannot create', async () => {
 		await expectAsync(
 			authz.check({
-				user: reader.id,
+				userId: reader.id,
 				action: CrudActions.CREATE,
 				model: 'post',
 			})
@@ -240,7 +240,7 @@ describe('Authorization - Role Based', () => {
 
 	it('a read can read', async () => {
 		await authz.check({
-			user: reader.id,
+			userId: reader.id,
 			action: CrudActions.READ,
 			model: 'post',
 		});

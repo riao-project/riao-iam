@@ -12,7 +12,7 @@ export enum CrudActions {
 export type Action = string | CrudActions;
 
 export interface AuthorizationLookup {
-	user: DatabaseRecordId;
+	userId: DatabaseRecordId;
 	action: Action;
 	model?: string;
 }
