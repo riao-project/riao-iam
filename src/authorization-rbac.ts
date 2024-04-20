@@ -10,7 +10,6 @@ export interface RoleBasedAuthorizationOptions extends AuthOptions {
 }
 
 export class RoleBasedAuthorization extends AuthorizationBase {
-	protected userTable;
 	protected permissionTable;
 	protected userRoleTable;
 	protected rolePermissionTable;
@@ -18,7 +17,6 @@ export class RoleBasedAuthorization extends AuthorizationBase {
 	public constructor(options: RoleBasedAuthorizationOptions) {
 		super(options);
 
-		this.userTable = this.userTable ?? 'users';
 		this.permissionTable = this.permissionTable ?? 'permissions';
 		this.userRoleTable = this.userRoleTable ?? 'user_roles';
 		this.rolePermissionTable =
