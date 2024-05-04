@@ -4,13 +4,15 @@ import { AuthenticationBase } from './authentication-base';
 import * as argon2 from 'argon2';
 import { AuthenticationError } from './errors/authentication-error';
 
+export interface PasswordLogin {
+	login: string;
+	password: string;
+}
+
 export class AuthenticationPassword<
 	TUser extends DatabaseRecord = DatabaseRecord
 > extends AuthenticationBase<TUser> {
-	public async login(credentials: {
-		login: string;
-		password: string;
-	}): Promise<TUser> {
+	public async login(credentials: PasswordLogin): Promise<TUser> {
 		const user = await this.findActiveUser({
 			columns: ['id', 'password'],
 			where: <any>{ email: credentials.login },
