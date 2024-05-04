@@ -14,7 +14,7 @@ describe('JWT', () => {
 
 		const data: { test: boolean } = await jwt.decodeToken(token);
 
-		expect(data.test).toEqual(true);
+		expect(data).toEqual({ test: true });
 	});
 
 	it('can use keypair from files', async () => {
@@ -30,7 +30,7 @@ describe('JWT', () => {
 
 		const data: { test: boolean } = await jwt.decodeToken(token);
 
-		expect(data.test).toEqual(true);
+		expect(data).toEqual({ test: true });
 	});
 
 	it('can use keypair from memory', async () => {
@@ -43,6 +43,6 @@ describe('JWT', () => {
 
 		const data: { test: boolean } = await jwt.decodeToken(token);
 
-		expect(data.test).toEqual(true);
+		expect(data).toEqual({ test: true });
 	});
 });

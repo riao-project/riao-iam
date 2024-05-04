@@ -6,7 +6,7 @@ import { Secret, SecretAlgorithm } from './secret';
 import { KeyPair, KeyPairAlgorithm } from './keypair';
 import { KeyObject } from 'crypto';
 
-export type JwtPayload = string | object | Buffer;
+export type JwtPayload = Record<string, any>;
 
 export type JwtSigningOptions = Secret | KeyPair;
 
@@ -60,11 +60,19 @@ export class Jwt<TPayload extends JwtPayload = JwtPayload> {
 	}
 
 	public async decodeToken(token: string): Promise<TPayload> {
-		return <TPayload>await jwt.verify(token, this.publicKey);
+		const result = <TPayload>await jwt.verify(token, this.publicKey);
+
+		delete result.iat;
+		delete result.nbf;
+		delete result.exp;
+
+		return result;
 	}
 
 	public async verifyAccessToken(token: string): Promise<TPayload> {
-		const data = <AccessTokenPayload>await this.decodeToken(token);
+		const data = <AccessTokenPayload>(
+			(<unknown>await this.decodeToken(token))
+		);
 
 		if (data.type !== 'access') {
 			throw new IamError('Expected access token, received ' + data.type);
@@ -76,7 +84,7 @@ export class Jwt<TPayload extends JwtPayload = JwtPayload> {
 	}
 
 	public async verifyRefreshToken(token: string): Promise<TPayload> {
-		const data = <TokenPayload>await this.decodeToken(token);
+		const data = <TokenPayload>(<unknown>await this.decodeToken(token));
 
 		if (data.type !== 'refresh') {
 			throw new IamError('Expected refresh token, received ' + data.type);
