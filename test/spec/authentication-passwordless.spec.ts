@@ -11,7 +11,7 @@ describe('Authentication - Passwordless', () => {
 	const publicKey = readFileSync('ecdsa-p521-public.pem').toString();
 	const privateKey = readFileSync('ecdsa-p521-private.pem').toString();
 
-	const authz = new AuthenticationPasswordless({
+	const authn = new AuthenticationPasswordless({
 		db: maindb,
 		userTable: 'authn_passwordless_users',
 		jwt: {
@@ -56,17 +56,17 @@ describe('Authentication - Passwordless', () => {
 
 	it('can login', async () => {
 		const login = 'test@example.com';
-		const token = await authz.getMagicToken({ login });
+		const token = await authn.getMagicToken({ login });
 
 		// Wait a second to avoid not-before-time exception
 		await new Promise((a, r) => setTimeout(a, 1000));
 
-		await authz.login({ token });
+		await authn.login({ token });
 	});
 
 	it('can reject wrong email', async () => {
 		const login = 'not_a_user@example.com';
-		await expectAsync(authz.getMagicToken({ login })).toBeRejectedWithError(
+		await expectAsync(authn.getMagicToken({ login })).toBeRejectedWithError(
 			AuthenticationError,
 			'Could not find active user'
 		);
@@ -74,12 +74,12 @@ describe('Authentication - Passwordless', () => {
 
 	it('can reject wrong token', async () => {
 		const login = 'test@example.com';
-		let token = await authz.getMagicToken({ login });
+		let token = await authn.getMagicToken({ login });
 		token = token.replace(/[a-z]/, '9'); // Simulate a bad token by changing one letter to a 9
 
 		// Wait a second to avoid not-before-time exception
 		await new Promise((a, r) => setTimeout(a, 1000));
 
-		await expectAsync(authz.login({ token })).toBeRejected();
+		await expectAsync(authn.login({ token })).toBeRejected();
 	});
 });

@@ -6,7 +6,7 @@ import { AuthenticationError } from '../../src/errors/authentication-error';
 import { createUsersTable } from 'test/create-test-users-table';
 
 describe('Authentication - Password', () => {
-	const authz = new AuthenticationPassword({
+	const authn = new AuthenticationPassword({
 		db: maindb,
 		userTable: 'authn_password_users',
 	});
@@ -18,14 +18,14 @@ describe('Authentication - Password', () => {
 			table: 'authn_password_users',
 			record: {
 				email: 'test@example.com',
-				password: await authz.hashPassword('password1234'),
+				password: await authn.hashPassword('password1234'),
 			},
 			primaryKey: 'id',
 		});
 	});
 
 	it('can login', async () => {
-		await authz.login({
+		await authn.login({
 			login: 'test@example.com',
 			password: 'password1234',
 		});
@@ -33,7 +33,7 @@ describe('Authentication - Password', () => {
 
 	it('can reject wrong password', async () => {
 		await expectAsync(
-			authz.login({
+			authn.login({
 				login: 'test@example.com',
 				password: 'password1235',
 			})
@@ -42,7 +42,7 @@ describe('Authentication - Password', () => {
 
 	it('can reject wrong email', async () => {
 		await expectAsync(
-			authz.login({
+			authn.login({
 				login: 'fail@example.com',
 				password: 'password1234',
 			})
