@@ -3,7 +3,7 @@ import { maindb } from '../../database/main';
 import { ColumnType } from '@riao/dbal';
 import { AuthenticationPassword } from '../../src/authentication-password';
 import { AuthenticationError } from '../../src/errors/authentication-error';
-import { createUsersTable } from 'test/create-test-users-table';
+import { createUsersTable } from '../create-test-users-table';
 
 describe('Authentication - Password', () => {
 	const authn = new AuthenticationPassword({
