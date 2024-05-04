@@ -21,9 +21,17 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 	protected accessTTL = '15m';
 	protected refreshTTL = '7d';
 
-	public constructor(options: IamOptions) {
-		for (const key in options) {
+	public constructor(options?: IamOptions) {
+		for (const key in options ?? {}) {
 			this[key] = options[key];
+		}
+
+		if (!this.authn) {
+			throw new Error('Iam cannot be created without authn');
+		}
+
+		if (!this.jwt) {
+			throw new Error('Iam cannot be created without jwt');
 		}
 	}
 
