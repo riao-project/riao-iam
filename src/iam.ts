@@ -1,6 +1,6 @@
 import { DatabaseRecordId } from '@riao/dbal';
 import { Jwt } from './jwt';
-import { AccessRefreshTokens } from './token';
+import { AccessRefreshTokens, AccessTokenPayload } from './token';
 import { AuthenticationBase } from './authentication-base';
 
 export interface IamOptions {
@@ -55,7 +55,7 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 	protected async getAccessToken(userId: DatabaseRecordId) {
 		// Generate access token
 		return await this.jwt.generateToken(
-			{
+			<AccessTokenPayload>{
 				type: 'access',
 				userId,
 			},
