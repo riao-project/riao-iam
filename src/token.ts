@@ -11,5 +11,5 @@ export interface TokenPayload {
 }
 
 export interface AccessTokenPayload extends TokenPayload {
-	scopes: string;
+	scopes: string[];
 }
