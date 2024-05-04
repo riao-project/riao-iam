@@ -2,6 +2,7 @@ import { DatabaseRecordId } from '@riao/dbal';
 import { Jwt } from './jwt';
 import { AccessRefreshTokens, AccessTokenPayload } from './token';
 import { AuthenticationBase } from './authentication-base';
+import { AuthenticationError } from './errors/authentication-error';
 
 export interface IamOptions {
 	authn?: AuthenticationBase;
@@ -39,6 +40,29 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 		const user = await this.authn.login(credentials);
 
 		return await this.getAuthTokens(user.id);
+	}
+
+	public async verifyAccessToken(options: {
+		userId: DatabaseRecordId;
+		accessToken: string;
+	}): Promise<AccessTokenPayload> {
+		const payload = <AccessTokenPayload>(
+			await this.jwt.verifyAccessToken(options.accessToken)
+		);
+
+		if (payload.type !== 'access') {
+			throw new AuthenticationError(
+				'Provided access token is not an access token'
+			);
+		}
+
+		if (payload.userId !== options.userId) {
+			throw new AuthenticationError(
+				'Provided access token is not for this user'
+			);
+		}
+
+		return payload;
 	}
 
 	public async refresh(
