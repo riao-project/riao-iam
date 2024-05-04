@@ -3,6 +3,7 @@ import { maindb } from '../../database/main';
 import { ColumnType } from '@riao/dbal';
 import { AuthenticationPassword } from '../../src/authentication-password';
 import { AuthenticationError } from '../../src/errors/authentication-error';
+import { createUsersTable } from 'test/create-test-users-table';
 
 describe('Authentication - Password', () => {
 	const authz = new AuthenticationPassword({
@@ -11,34 +12,7 @@ describe('Authentication - Password', () => {
 	});
 
 	beforeAll(async () => {
-		await maindb.ddl.dropTable({
-			tables: ['authn_password_users'],
-			ifExists: true,
-		});
-
-		await maindb.ddl.createTable({
-			name: 'authn_password_users',
-			columns: [
-				{
-					name: 'id',
-					type: ColumnType.BIGINT,
-					primaryKey: true,
-					autoIncrement: true,
-				},
-				{
-					name: 'email',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-				{
-					name: 'password',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-			],
-		});
+		await createUsersTable('authn_password_users');
 
 		await maindb.query.insertOne({
 			table: 'authn_password_users',
