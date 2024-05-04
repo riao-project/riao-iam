@@ -26,14 +26,6 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 		for (const key in options ?? {}) {
 			this[key] = options[key];
 		}
-
-		if (!this.authn) {
-			throw new Error('Iam cannot be created without authn');
-		}
-
-		if (!this.jwt) {
-			throw new Error('Iam cannot be created without jwt');
-		}
 	}
 
 	public async login(credentials: TLogin) {
