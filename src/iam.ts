@@ -35,14 +35,14 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 	}
 
 	public async verifyAccessToken(options: {
-		userId: DatabaseRecordId;
+		userId?: DatabaseRecordId;
 		accessToken: string;
 	}): Promise<Omit<AccessTokenPayload, 'type'>> {
 		const payload = <AccessTokenPayload>(
 			await this.jwt.verifyAccessToken(options.accessToken)
 		);
 
-		if (payload.userId !== options.userId) {
+		if (options.userId && payload.userId !== options.userId) {
 			throw new AuthenticationError(
 				'Provided access token is not for this user'
 			);
