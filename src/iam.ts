@@ -85,6 +85,6 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 		const access = await this.getAccessToken(userId);
 		const refresh = await this.getRefreshToken(userId);
 
-		return { access, refresh };
+		return { userId, access, refresh };
 	}
 }
