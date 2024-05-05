@@ -23,6 +23,7 @@ class TestIam extends Iam<PasswordLogin> {
 	authn = new AuthenticationPassword({
 		db: maindb,
 		userTable: 'iam_users',
+		loginColumn: 'email',
 	});
 
 	jwt = jwt;

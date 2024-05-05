@@ -41,7 +41,7 @@ export class AuthenticationPasswordless<
 	): Promise<string> {
 		// Check user
 		const user = await this.findActiveUser({
-			where: <any>{ email: credentials.login },
+			where: <any>{ [this.loginColumn]: credentials.login },
 		});
 
 		// Generate & return token

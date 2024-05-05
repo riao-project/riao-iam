@@ -9,6 +9,7 @@ describe('Authentication - Password', () => {
 	const authn = new AuthenticationPassword({
 		db: maindb,
 		userTable: 'authn_password_users',
+		loginColumn: 'email',
 	});
 
 	beforeAll(async () => {

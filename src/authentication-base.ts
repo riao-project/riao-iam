@@ -9,11 +9,19 @@ import {
 import { AuthenticationError } from './errors/authentication-error';
 import { AuthBase, AuthOptions } from './auth';
 
-export type AuthenticationOptions = AuthOptions;
+export interface AuthenticationOptions extends AuthOptions {
+	loginColumn: string;
+}
 
 export abstract class AuthenticationBase<
 	TUser extends DatabaseRecord = DatabaseRecord
 > extends AuthBase<TUser> {
+	protected loginColumn;
+
+	public constructor(options: AuthenticationOptions) {
+		super(options);
+	}
+
 	public async findActiveUser(query: SelectQuery<TUser>): Promise<TUser> {
 		const userWhere = this.userIsActive();
 

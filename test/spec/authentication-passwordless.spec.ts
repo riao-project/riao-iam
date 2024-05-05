@@ -14,6 +14,7 @@ describe('Authentication - Passwordless', () => {
 	const authn = new AuthenticationPasswordless({
 		db: maindb,
 		userTable: 'authn_passwordless_users',
+		loginColumn: 'email',
 		jwt: {
 			publicKey: createPublicKey(publicKey),
 			privateKey: createPrivateKey(privateKey),

@@ -15,7 +15,7 @@ export class AuthenticationPassword<
 	public async login(credentials: PasswordLogin): Promise<TUser> {
 		const user = await this.findActiveUser({
 			columns: ['id', 'password'],
-			where: <any>{ email: credentials.login },
+			where: <any>{ [this.loginColumn]: credentials.login },
 		});
 
 		if (await this.verifyPassword(user.password, credentials.password)) {
