@@ -2,8 +2,8 @@ import * as crypto from 'crypto';
 import { readFileSync, writeFileSync } from 'fs';
 
 export interface KeyPair {
-	publicKey: crypto.KeyObject;
-	privateKey: crypto.KeyObject;
+	publicKey: string | crypto.KeyObject;
+	privateKey: string | crypto.KeyObject;
 	algorithm: KeyPairAlgorithm;
 }
 
@@ -85,7 +85,17 @@ export class KeyPairGenerator {
 		publicKeyPath: string;
 		privateKeyPath: string;
 	}): void {
-		writeFileSync(options.publicKeyPath, options.keys.publicKey.export());
-		writeFileSync(options.privateKeyPath, options.keys.privateKey.export());
+		const publicKey: string =
+			options.keys.publicKey instanceof crypto.KeyObject
+				? options.keys.publicKey.export().toString()
+				: options.keys.publicKey;
+
+		const privateKey: string =
+			options.keys.privateKey instanceof crypto.KeyObject
+				? options.keys.privateKey.export().toString()
+				: options.keys.privateKey;
+
+		writeFileSync(options.publicKeyPath, publicKey);
+		writeFileSync(options.privateKeyPath, privateKey);
 	}
 }
