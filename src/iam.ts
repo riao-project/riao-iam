@@ -37,16 +37,10 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 	public async verifyAccessToken(options: {
 		userId: DatabaseRecordId;
 		accessToken: string;
-	}): Promise<AccessTokenPayload> {
+	}): Promise<Omit<AccessTokenPayload, 'type'>> {
 		const payload = <AccessTokenPayload>(
 			await this.jwt.verifyAccessToken(options.accessToken)
 		);
-
-		if (payload.type !== 'access') {
-			throw new AuthenticationError(
-				'Provided access token is not an access token'
-			);
-		}
 
 		if (payload.userId !== options.userId) {
 			throw new AuthenticationError(
@@ -74,6 +68,7 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 			<AccessTokenPayload>{
 				type: 'access',
 				userId,
+				scopes: [], // TODO: Fetch scopes?
 			},
 			{ expiresIn: this.accessTTL }
 		);
