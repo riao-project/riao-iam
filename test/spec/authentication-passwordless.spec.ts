@@ -6,6 +6,7 @@ import { AuthenticationError } from '../../src/errors/authentication-error';
 
 import { readFileSync } from 'fs';
 import { createPrivateKey, createPublicKey } from 'crypto';
+import { Token } from '../../src/jwt';
 
 describe('Authentication - Passwordless', () => {
 	const publicKey = readFileSync('ecdsa-p521-public.pem').toString();
@@ -62,7 +63,7 @@ describe('Authentication - Passwordless', () => {
 		// Wait a second to avoid not-before-time exception
 		await new Promise((a, r) => setTimeout(a, 1000));
 
-		await authn.login({ token });
+		await authn.login({ token: token.token });
 	});
 
 	it('can reject wrong email', async () => {
@@ -75,8 +76,8 @@ describe('Authentication - Passwordless', () => {
 
 	it('can reject wrong token', async () => {
 		const login = 'test@example.com';
-		let token = await authn.getMagicToken({ login });
-		token = token.replace(/[a-z]/, '9'); // Simulate a bad token by changing one letter to a 9
+		const tokenObj: Token = await authn.getMagicToken({ login });
+		const token: string = tokenObj.token.replace(/[a-z]/, '9'); // Simulate a bad token by changing one letter to a 9
 
 		// Wait a second to avoid not-before-time exception
 		await new Promise((a, r) => setTimeout(a, 1000));

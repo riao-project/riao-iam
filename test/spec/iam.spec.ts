@@ -64,7 +64,7 @@ describe('IAM', async () => {
 			password: 'password1234',
 		});
 
-		checkTokens(access, refresh);
+		checkTokens(access.token, refresh.token);
 	});
 
 	it('can refresh', async () => {
@@ -73,9 +73,9 @@ describe('IAM', async () => {
 			password: 'password1234',
 		});
 
-		const refreshed = await iam.refresh(1, login.refresh);
+		const refreshed = await iam.refresh(1, login.refresh.token);
 
-		checkTokens(refreshed.access, refreshed.refresh);
+		checkTokens(refreshed.access.token, refreshed.refresh.token);
 	});
 
 	it('can verify access', async () => {
@@ -86,7 +86,7 @@ describe('IAM', async () => {
 
 		const result = await iam.verifyAccessToken({
 			userId: 1,
-			accessToken: login.access,
+			accessToken: login.access.token,
 		});
 
 		expect(result).toEqual({

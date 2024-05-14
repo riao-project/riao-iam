@@ -3,7 +3,7 @@ import {
 	AuthenticationBase,
 	AuthenticationOptions,
 } from './authentication-base';
-import { Jwt, JwtOptions } from './jwt';
+import { Token, Jwt, JwtOptions } from './jwt';
 import { AuthenticationError } from './errors/authentication-error';
 
 export interface MagicLinkPayload {
@@ -38,7 +38,7 @@ export class AuthenticationPasswordless<
 	public async getMagicToken(
 		credentials: { login: string },
 		options: TokenOptions = defaultTokenOptions
-	): Promise<string> {
+	): Promise<Token> {
 		// Check user
 		const user = await this.findActiveUser({
 			where: <any>{ [this.loginColumn]: credentials.login },

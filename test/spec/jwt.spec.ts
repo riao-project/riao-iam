@@ -12,7 +12,7 @@ describe('JWT', () => {
 
 		await new Promise((a, r) => setTimeout(a, 1000));
 
-		const data: { test: boolean } = await jwt.decodeToken(token);
+		const data: { test: boolean } = await jwt.decodeToken(token.token);
 
 		expect(data).toEqual({ test: true });
 	});
@@ -28,7 +28,7 @@ describe('JWT', () => {
 
 		await new Promise((a, r) => setTimeout(a, 1000));
 
-		const data: { test: boolean } = await jwt.decodeToken(token);
+		const data: { test: boolean } = await jwt.decodeToken(token.token);
 
 		expect(data).toEqual({ test: true });
 	});
@@ -41,7 +41,7 @@ describe('JWT', () => {
 
 		await new Promise((a, r) => setTimeout(a, 1000));
 
-		const data: { test: boolean } = await jwt.decodeToken(token);
+		const data: { test: boolean } = await jwt.decodeToken(token.token);
 
 		expect(data).toEqual({ test: true });
 	});

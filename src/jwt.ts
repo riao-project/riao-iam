@@ -1,6 +1,7 @@
 import * as jwt from 'jsonwebtoken';
+import * as jwtTimespan from 'jsonwebtoken/lib/timespan';
 
-import { AccessTokenPayload, TokenPayload } from './token';
+import { AccessTokenPayload, AuthTokenPayload } from './token';
 import { IamError } from './errors/error';
 import { Secret, SecretAlgorithm } from './secret';
 import { KeyPair, KeyPairAlgorithm } from './keypair';
@@ -14,6 +15,11 @@ export type JwtOptions = JwtSigningOptions & {
 	expiresIn?: number | string;
 	notBefore?: number | string;
 };
+
+export interface Token {
+	token: string;
+	expiration: number;
+}
 
 export class Jwt<TPayload extends JwtPayload = JwtPayload> {
 	protected publicKey: KeyObject;
@@ -52,11 +58,16 @@ export class Jwt<TPayload extends JwtPayload = JwtPayload> {
 	public async generateToken(
 		data: TPayload,
 		options: jwt.SignOptions = {}
-	): Promise<string> {
-		return await jwt.sign(data, this.privateKey, {
+	): Promise<Token> {
+		options = {
 			...this.tokenOptions(),
 			...options,
-		});
+		};
+
+		const expiration = jwtTimespan(options.expiresIn);
+		const token = await jwt.sign(data, this.privateKey, options);
+
+		return { token, expiration };
 	}
 
 	public async decodeToken(token: string): Promise<TPayload> {
@@ -84,7 +95,7 @@ export class Jwt<TPayload extends JwtPayload = JwtPayload> {
 	}
 
 	public async verifyRefreshToken(token: string): Promise<TPayload> {
-		const data = <TokenPayload>(<unknown>await this.decodeToken(token));
+		const data = <AuthTokenPayload>(<unknown>await this.decodeToken(token));
 
 		if (data.type !== 'refresh') {
 			throw new IamError('Expected refresh token, received ' + data.type);
