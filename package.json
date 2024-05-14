@@ -1,5 +1,5 @@
 {
-	"name": "riao-iam",
+	"name": "@riao/iam",
 	"version": "1.0.0",
 	"description": "riao-iam",
 	"private": "true",
