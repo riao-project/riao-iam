@@ -51,15 +51,15 @@ export class Iam<TLogin extends LoginInterface = LoginInterface> {
 		return payload;
 	}
 
-	public async refresh(
-		userId: DatabaseRecordId,
-		token: string
-	): Promise<AccessRefreshTokens> {
+	public async refresh(userId: DatabaseRecordId, token: string) {
 		await this.jwt.verifyRefreshToken(token);
 
-		const user = await this.authn.findActiveUser({ where: { id: userId } });
+		await this.authn.findActiveUser({ where: { id: userId } });
 
-		return await this.getAuthTokens(user.id);
+		return {
+			userId,
+			access: await this.getAccessToken(userId),
+		};
 	}
 
 	protected async getAccessToken(userId: DatabaseRecordId) {

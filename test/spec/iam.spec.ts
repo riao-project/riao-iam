@@ -47,12 +47,14 @@ describe('IAM', async () => {
 		});
 	});
 
-	async function checkTokens(access: string, refresh: string) {
+	async function checkAccessToken(access: string) {
 		expect(await jwt.verifyAccessToken(access)).toEqual({
 			userId: 1,
 			scopes: [],
 		});
+	}
 
+	async function checkRefreshToken(refresh: string) {
 		expect(await jwt.verifyRefreshToken(refresh)).toEqual({
 			userId: 1,
 		});
@@ -64,7 +66,8 @@ describe('IAM', async () => {
 			password: 'password1234',
 		});
 
-		checkTokens(access.token, refresh.token);
+		checkAccessToken(access.token);
+		checkRefreshToken(refresh.token);
 	});
 
 	it('can refresh', async () => {
@@ -75,7 +78,7 @@ describe('IAM', async () => {
 
 		const refreshed = await iam.refresh(1, login.refresh.token);
 
-		checkTokens(refreshed.access.token, refreshed.refresh.token);
+		checkAccessToken(refreshed.access.token);
 	});
 
 	it('can verify access', async () => {
