@@ -5,7 +5,6 @@ import {
 	PasswordLogin,
 } from '../../src/authentication-password';
 import { Iam } from '../../src/iam';
-import { createUsersTable } from '../create-test-users-table';
 import { Jwt } from '../../src/jwt';
 import { KeyPairGenerator } from '../../src/keypair';
 
@@ -22,7 +21,7 @@ const jwt: Jwt = new Jwt({
 class TestIam extends Iam<PasswordLogin> {
 	authn = new AuthenticationPassword({
 		db: maindb,
-		userTable: 'iam_users',
+		userTable: 'users',
 		loginColumn: 'email',
 	});
 
@@ -31,16 +30,15 @@ class TestIam extends Iam<PasswordLogin> {
 
 describe('IAM', async () => {
 	let iam: TestIam;
+	let user: { id: number };
 
 	beforeAll(async () => {
-		await createUsersTable('iam_users');
-
 		iam = new TestIam();
 
-		await maindb.query.insertOne({
-			table: 'iam_users',
+		user = <any>await maindb.query.insertOne({
+			table: 'users',
 			record: {
-				email: 'test@example.com',
+				email: 'iamtest@example.com',
 				password: await iam.authn.hashPassword('password1234'),
 			},
 			primaryKey: 'id',
@@ -49,20 +47,20 @@ describe('IAM', async () => {
 
 	async function checkAccessToken(access: string) {
 		expect(await jwt.verifyAccessToken(access)).toEqual({
-			userId: 1,
+			userId: user.id,
 			scopes: [],
 		});
 	}
 
 	async function checkRefreshToken(refresh: string) {
 		expect(await jwt.verifyRefreshToken(refresh)).toEqual({
-			userId: 1,
+			userId: user.id,
 		});
 	}
 
 	it('can login', async () => {
 		const { access, refresh } = await iam.login({
-			login: 'test@example.com',
+			login: 'iamtest@example.com',
 			password: 'password1234',
 		});
 
@@ -72,28 +70,28 @@ describe('IAM', async () => {
 
 	it('can refresh', async () => {
 		const login = await iam.login({
-			login: 'test@example.com',
+			login: 'iamtest@example.com',
 			password: 'password1234',
 		});
 
-		const refreshed = await iam.refresh(1, login.refresh.token);
+		const refreshed = await iam.refresh(user.id, login.refresh.token);
 
 		await checkAccessToken(refreshed.access.token);
 	});
 
 	it('can verify access', async () => {
 		const login = await iam.login({
-			login: 'test@example.com',
+			login: 'iamtest@example.com',
 			password: 'password1234',
 		});
 
 		const result = await iam.verifyAccessToken({
-			userId: 1,
+			userId: user.id,
 			accessToken: login.access.token,
 		});
 
 		expect(result).toEqual({
-			userId: 1,
+			userId: user.id,
 			scopes: [],
 		});
 	});

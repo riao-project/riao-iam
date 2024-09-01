@@ -8,11 +8,11 @@ import { AuthorizationError } from '../../src/errors/authorization-error';
 
 describe('Authorization - Role Based', () => {
 	const tables = {
-		users: 'authz_rbac_users',
-		user_roles: 'authz_rbac_user_roles',
-		roles: 'authz_rbac_roles',
-		role_permissions: 'authz_rbac_role_permissions',
-		permissions: 'authz_rbac_permissions',
+		users: 'users',
+		user_roles: 'riao_user_roles',
+		roles: 'riao_roles',
+		role_permissions: 'riao_role_permissions',
+		permissions: 'riao_permissions',
 	};
 
 	const authz = new RoleBasedAuthorization({
@@ -27,138 +27,15 @@ describe('Authorization - Role Based', () => {
 	let reader: DatabaseRecord;
 
 	beforeAll(async () => {
-		await maindb.ddl.dropTable({
-			tables: Object.values(tables),
-			ifExists: true,
-		});
-
-		await maindb.ddl.createTable({
-			name: tables.users,
-			columns: [
-				{
-					name: 'id',
-					type: ColumnType.BIGINT,
-					primaryKey: true,
-					autoIncrement: true,
-				},
-				{
-					name: 'email',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-			],
-		});
-
-		await maindb.ddl.createTable({
-			name: tables.roles,
-			columns: [
-				{
-					name: 'id',
-					type: ColumnType.BIGINT,
-					primaryKey: true,
-					autoIncrement: true,
-				},
-				{
-					name: 'name',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-			],
-		});
-
-		await maindb.ddl.createTable({
-			name: tables.permissions,
-			columns: [
-				{
-					name: 'id',
-					type: ColumnType.BIGINT,
-					primaryKey: true,
-					autoIncrement: true,
-				},
-				{
-					name: 'name',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-				{
-					name: 'action',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-				{
-					name: 'model',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: false,
-				},
-			],
-		});
-
-		await maindb.ddl.createTable({
-			name: tables.role_permissions,
-			columns: [
-				{
-					name: 'role_id',
-					type: ColumnType.BIGINT,
-				},
-				{
-					name: 'permission_id',
-					type: ColumnType.BIGINT,
-				},
-			],
-			foreignKeys: [
-				{
-					columns: ['role_id'],
-					referencesTable: tables.roles,
-					referencesColumns: ['id'],
-				},
-				{
-					columns: ['permission_id'],
-					referencesTable: tables.permissions,
-					referencesColumns: ['id'],
-				},
-			],
-		});
-
-		await maindb.ddl.createTable({
-			name: tables.user_roles,
-			columns: [
-				{
-					name: 'user_id',
-					type: ColumnType.BIGINT,
-				},
-				{
-					name: 'role_id',
-					type: ColumnType.BIGINT,
-				},
-			],
-			foreignKeys: [
-				{
-					columns: ['user_id'],
-					referencesTable: tables.users,
-					referencesColumns: ['id'],
-				},
-				{
-					columns: ['role_id'],
-					referencesTable: tables.roles,
-					referencesColumns: ['id'],
-				},
-			],
-		});
-
 		writer = await maindb.query.insertOne({
 			table: tables.users,
-			record: { email: 'writer@example.com' },
+			record: { email: 'writer@example.com', password: '' },
 			primaryKey: 'id',
 		});
 
 		reader = await maindb.query.insertOne({
 			table: tables.users,
-			record: { email: 'reader@example.com' },
+			record: { email: 'reader@example.com', password: '' },
 			primaryKey: 'id',
 		});
 

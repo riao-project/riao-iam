@@ -7,6 +7,7 @@ import { AuthenticationError } from '../../src/errors/authentication-error';
 import { readFileSync } from 'fs';
 import { createPrivateKey, createPublicKey } from 'crypto';
 import { Token } from '../../src/jwt';
+import { CreateUsersTable } from '../../src/migrations';
 
 describe('Authentication - Passwordless', () => {
 	const publicKey = readFileSync('ecdsa-p521-public.pem').toString();
@@ -29,35 +30,22 @@ describe('Authentication - Passwordless', () => {
 			ifExists: true,
 		});
 
-		await maindb.ddl.createTable({
-			name: 'authn_passwordless_users',
-			columns: [
-				{
-					name: 'id',
-					type: ColumnType.BIGINT,
-					primaryKey: true,
-					autoIncrement: true,
-				},
-				{
-					name: 'email',
-					type: ColumnType.VARCHAR,
-					length: 1024,
-					required: true,
-				},
-			],
-		});
+		const table = new CreateUsersTable(maindb);
+		table.tableName = 'authn_passwordless_users';
+
+		await table.up();
 
 		await maindb.query.insertOne({
-			table: 'authn_passwordless_users',
+			table: table.tableName,
 			record: {
-				email: 'test@example.com',
+				email: 'authn-passwordless@example.com',
 			},
 			primaryKey: 'id',
 		});
 	});
 
 	it('can login', async () => {
-		const login = 'test@example.com';
+		const login = 'authn-passwordless@example.com';
 		const token = await authn.getMagicToken({ login });
 
 		// Wait a second to avoid not-before-time exception
@@ -75,7 +63,7 @@ describe('Authentication - Passwordless', () => {
 	});
 
 	it('can reject wrong token', async () => {
-		const login = 'test@example.com';
+		const login = 'authn-passwordless@example.com';
 		const tokenObj: Token = await authn.getMagicToken({ login });
 		const token: string = tokenObj.token.replace(/[a-z]/, '9'); // Simulate a bad token by changing one letter to a 9
 
