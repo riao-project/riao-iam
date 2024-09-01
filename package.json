@@ -22,14 +22,14 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"@riao/dbal": "^3.1.0",
-		"@riao/mysql": "^3.1.0",
+		"@riao/dbal": "^3.3.0",
 		"argon2": "^0.40.1",
 		"jsonwebtoken": "^9.0.2"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
 		"@riao/cli": "^3.0.0",
+		"@riao/mysql": "^3.3.0",
 		"@types/jasmine": "^4.3.0",
 		"@types/node": "^18.11.9",
 		"@typescript-eslint/eslint-plugin": "^5.44.0",
