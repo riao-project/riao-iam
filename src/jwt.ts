@@ -5,7 +5,12 @@ import { AccessTokenPayload, AuthTokenPayload } from './token';
 import { IamError } from './errors/error';
 import { Secret, SecretAlgorithm } from './secret';
 import { KeyPair, KeyPairAlgorithm } from './keypair';
-import { KeyObject } from 'crypto';
+import {
+	createPrivateKey,
+	createPublicKey,
+	createSecretKey,
+	KeyObject,
+} from 'crypto';
 
 export type JwtPayload = Record<string, any>;
 

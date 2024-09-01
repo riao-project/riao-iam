@@ -28,10 +28,10 @@ export abstract class AuthenticationBase<
 		const userWhere = this.userIsActive();
 
 		if (query.where && userWhere !== undefined) {
-			query.where = [this.userIsActive(), and, query.where];
+			query.where = [userWhere, and, query.where];
 		}
 		else if (userWhere !== undefined) {
-			query.where = this.userIsActive();
+			query.where = userWhere;
 		}
 
 		const user = await this.userRepo.findOne({

@@ -43,6 +43,10 @@ export class KeyPairGenerator {
 			namedCurve = 'secp521r1';
 		}
 
+		if (type === undefined) {
+			throw new Error('Keypair type could not be inferred');
+		}
+
 		const { publicKey, privateKey } = crypto.generateKeyPairSync(
 			<any>type,
 			{
