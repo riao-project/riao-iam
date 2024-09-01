@@ -16,10 +16,12 @@ export interface AuthenticationOptions extends AuthOptions {
 export abstract class AuthenticationBase<
 	TUser extends DatabaseRecord = DatabaseRecord
 > extends AuthBase<TUser> {
-	protected loginColumn;
+	protected loginColumn: string;
 
 	public constructor(options: AuthenticationOptions) {
 		super(options);
+
+		this.loginColumn = options.loginColumn ?? this.loginColumn;
 	}
 
 	public async findActiveUser(query: SelectQuery<TUser>): Promise<TUser> {

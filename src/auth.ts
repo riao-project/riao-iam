@@ -11,9 +11,8 @@ export abstract class AuthBase<TUser extends DatabaseRecord = DatabaseRecord> {
 	protected userTable = 'users';
 
 	public constructor(options: AuthOptions) {
-		for (const key in options) {
-			this[key] = options[key];
-		}
+		this.db = options.db ?? this.db;
+		this.userTable = options.userTable ?? this.userTable;
 
 		this.userRepo = this.db.getQueryRepository({
 			table: this.userTable,

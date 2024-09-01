@@ -17,10 +17,14 @@ export class RoleBasedAuthorization extends AuthorizationBase {
 	public constructor(options: RoleBasedAuthorizationOptions) {
 		super(options);
 
-		this.permissionTable = this.permissionTable ?? 'permissions';
-		this.userRoleTable = this.userRoleTable ?? 'user_roles';
+		this.permissionTable =
+			options.permissionTable ?? this.permissionTable ?? 'permissions';
+		this.userRoleTable =
+			options.userRoleTable ?? this.userRoleTable ?? 'user_roles';
 		this.rolePermissionTable =
-			this.rolePermissionTable ?? 'role_permissions';
+			options.rolePermissionTable ??
+			this.rolePermissionTable ??
+			'role_permissions';
 	}
 
 	public async check(lookup: AuthorizationLookup): Promise<void> {

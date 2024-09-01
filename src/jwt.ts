@@ -30,21 +30,26 @@ export class Jwt<TPayload extends JwtPayload = JwtPayload> {
 	protected algorithm?: SecretAlgorithm | KeyPairAlgorithm;
 
 	public constructor(options: JwtOptions) {
-		let algorithm;
+		this.expiresIn = options.expiresIn ?? this.expiresIn;
+		this.notBefore = options.notBefore ?? this.notBefore;
+		this.algorithm = options.algorithm ?? this.algorithm;
 
-		for (const option in options) {
-			const value = options[option];
-
-			if (option === 'secret') {
-				this.publicKey = value;
-				this.privateKey = value;
-			}
-			else {
-				this[option] = value;
-			}
+		if ('secret' in options && options.secret) {
+			this.privateKey = this.publicKey = createSecretKey(
+				Buffer.from(options.secret)
+			);
 		}
+		else if ('privateKey' in options && options.privateKey) {
+			this.publicKey =
+				typeof options.publicKey === 'string'
+					? createPublicKey(options.publicKey)
+					: options.publicKey;
 
-		this.algorithm = options.algorithm ?? algorithm;
+			this.privateKey =
+				typeof options.privateKey === 'string'
+					? createPrivateKey(options.privateKey)
+					: options.privateKey;
+		}
 	}
 
 	protected tokenOptions(): jwt.SignOptions {
