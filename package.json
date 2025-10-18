@@ -24,11 +24,13 @@
 	"dependencies": {
 		"@riao/dbal": "file:../riao-dbal/dist/src",
 		"@riao/mysql": "^3.4.0",
-		"@riao/sqlite": "file:../riao-driver-sqlite/dist/src"
+		"@riao/sqlite": "file:../riao-driver-sqlite/dist/src",
+		"bcrypt": "^6.0.0"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
 		"@riao/cli": "file:../riao-cli/src",
+		"@types/bcrypt": "^6.0.0",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^18.19.39",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
