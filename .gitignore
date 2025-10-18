@@ -47,3 +47,8 @@ dist/
 
 # Environment Variables
 .env
+*.db.env
+
+# Database files
+*.db
+.schema/

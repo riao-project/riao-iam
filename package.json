@@ -1,5 +1,5 @@
 {
-	"name": "riao-iam",
+	"name": "@riao/iam",
 	"version": "1.0.0",
 	"description": "riao-iam",
 	"private": "true",
@@ -21,8 +21,14 @@
 		"script": "ts-node scripts",
 		"publish": "npm run script -- publish"
 	},
+	"dependencies": {
+		"@riao/dbal": "file:../riao-dbal/dist/src",
+		"@riao/mysql": "^3.4.0",
+		"@riao/sqlite": "file:../riao-driver-sqlite/dist/src"
+	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
+		"@riao/cli": "file:../riao-cli/src",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^18.19.39",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
@@ -41,13 +47,13 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/riao-iam/riao-iam.git"
+		"url": "git+https://github.com/riao-project/riao-iam.git"
 	},
-	"author": "riao-iam",
+	"author": "riao-project",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/riao-iam/riao-iam/issues"
+		"url": "https://github.com/riao-project/riao-iam/issues"
 	},
-	"homepage": "https://github.com/riao-iam/riao-iam#readme",
+	"homepage": "https://github.com/riao-project/riao-iam#readme",
 	"keywords": []
 }
