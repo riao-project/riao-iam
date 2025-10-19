@@ -1,8 +1,8 @@
 import { Database } from '@riao/dbal';
 import {
 	BigIntKeyColumn,
-	NameColumn,
 	CreateTimestampColumn,
+	UsernameColumn,
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
@@ -33,7 +33,7 @@ export class CreatePrincipalTableMigration extends Migration {
 					name: this.options.principalIdColumn,
 				},
 				{
-					...NameColumn,
+					...UsernameColumn,
 					name: this.options.loginColumn,
 				},
 				{ ...CreateTimestampColumn },
