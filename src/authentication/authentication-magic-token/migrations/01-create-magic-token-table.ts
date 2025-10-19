@@ -7,14 +7,18 @@ import {
 import { Migration } from '@riao/dbal';
 
 interface CreateMagicTokenTableOptions {
-	tableName?: string;
-	magicTokenColumnName?: string;
+	table?: string;
+	tokenColumn?: string;
+	principalTable?: string;
+	principalIdColumn?: string;
 }
 
 export class CreateMagicTokenTable extends Migration {
 	protected override options: CreateMagicTokenTableOptions = {
-		tableName: 'magic_tokens',
-		magicTokenColumnName: 'token',
+		table: 'magic_tokens',
+		tokenColumn: 'token',
+		principalTable: 'principals',
+		principalIdColumn: 'id',
 	};
 
 	public constructor(db: Database, options: CreateMagicTokenTableOptions) {
@@ -23,7 +27,7 @@ export class CreateMagicTokenTable extends Migration {
 
 	override async up(): Promise<void> {
 		await this.ddl.createTable({
-			name: this.options.tableName!,
+			name: this.options.table!,
 			columns: [
 				UUIDKeyColumn,
 				CreateTimestampColumn,
@@ -39,17 +43,20 @@ export class CreateMagicTokenTable extends Migration {
 					length: 255,
 					required: true,
 					fk: {
-						referencesTable: 'principals',
-						referencesColumn: 'id',
+						referencesTable: this.options.principalTable!,
+						referencesColumn: this.options.principalIdColumn!,
 						onDelete: 'CASCADE',
 					},
 				},
-				{ ...PasswordColumn, name: this.options.magicTokenColumnName! },
+				{
+					...PasswordColumn,
+					name: this.options.tokenColumn!,
+				},
 			],
 		});
 	}
 
 	override async down(): Promise<void> {
-		await this.ddl.dropTable({ tables: this.options.tableName! });
+		await this.ddl.dropTable({ tables: this.options.table! });
 	}
 }

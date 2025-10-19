@@ -16,7 +16,7 @@ describe('Authentication - Password', () => {
 
 	const auth = new (class extends PasswordAuthentication<PasswordPrincipal> {
 		protected override principalRepo = repo;
-	})();
+	})({ repo });
 
 	beforeAll(async () => {
 		await db.init();
@@ -29,7 +29,7 @@ describe('Authentication - Password', () => {
 
 	it('should create a principal with a hashed password', async () => {
 		await auth.createPrincipal({
-			principal_name: 'create_principal_test',
+			login: 'create_principal_test',
 			password: 'password123',
 		});
 
@@ -45,12 +45,12 @@ describe('Authentication - Password', () => {
 
 	it('should authenticate a principal with correct credentials', async () => {
 		await auth.createPrincipal({
-			principal_name: 'correct_test',
+			login: 'correct_test',
 			password: 'password123',
 		});
 
 		const authenticated = await auth.authenticate({
-			principal_name: 'correct_test',
+			login: 'correct_test',
 			password: 'password123',
 		});
 
@@ -59,17 +59,17 @@ describe('Authentication - Password', () => {
 		}
 
 		expect(authenticated.id).toBeGreaterThanOrEqual(1);
-		expect(authenticated.principal_name).toEqual('correct_test');
+		expect(authenticated.login).toEqual('correct_test');
 	});
 
 	it('should fail authentication with incorrect credentials', async () => {
 		await auth.createPrincipal({
-			principal_name: 'incorrect_test',
+			login: 'incorrect_test',
 			password: 'password123',
 		});
 
 		const authenticated = await auth.authenticate({
-			principal_name: 'incorrect_test',
+			login: 'incorrect_test',
 			password: 'wrongpassword',
 		});
 

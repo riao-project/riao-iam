@@ -3,33 +3,32 @@ import { PasswordColumn } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
 interface AddPasswordColumnOptions {
-	tableName?: string;
-	passwordColumnName?: string;
+	table: string;
+	passwordColumn: string;
 }
 
 export class AddPasswordColumn extends Migration {
 	protected override options: AddPasswordColumnOptions = {
-		tableName: 'principals',
-		passwordColumnName: 'password',
+		table: 'principals',
+		passwordColumn: 'password',
 	};
 
 	public constructor(db: Database, options: AddPasswordColumnOptions) {
 		super(db, options);
+		this.options = { ...this.options, ...options };
 	}
 
 	override async up(): Promise<void> {
 		await this.ddl.addColumns({
-			table: this.options.tableName!,
-			columns: [
-				{ ...PasswordColumn, name: this.options.passwordColumnName! },
-			],
+			table: this.options.table,
+			columns: [{ ...PasswordColumn, name: this.options.passwordColumn }],
 		});
 	}
 
 	override async down(): Promise<void> {
 		await this.ddl.dropColumn({
-			table: this.options.tableName!,
-			column: this.options.passwordColumnName!,
+			table: this.options.table,
+			column: this.options.passwordColumn,
 		});
 	}
 }

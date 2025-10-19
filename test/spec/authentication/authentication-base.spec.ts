@@ -15,7 +15,7 @@ describe('Authentication - Base', () => {
 		public async authenticate(credentials: any): Promise<Principal | null> {
 			return null;
 		}
-	})();
+	})({ repo });
 
 	beforeAll(async () => {
 		await db.init();
@@ -28,7 +28,7 @@ describe('Authentication - Base', () => {
 
 	it('should create a principal with a hashed password', async () => {
 		await auth.createPrincipal({
-			principal_name: 'create_principal_test',
+			login: 'create_principal_test',
 		});
 
 		const principal = await repo.findOne({ where: { id: '1' } });
@@ -42,13 +42,13 @@ describe('Authentication - Base', () => {
 
 	it('can find active principal', async () => {
 		await auth.createPrincipal({
-			principal_name: 'active_principal_test',
+			login: 'active_principal_test',
 		});
 
 		const principal = await auth.findActivePrincipal({
-			where: { principal_name: 'active_principal_test' },
+			where: { login: 'active_principal_test' },
 		});
 
-		expect(principal?.principal_name).toEqual('active_principal_test');
+		expect(principal?.login).toEqual('active_principal_test');
 	});
 });

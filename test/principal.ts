@@ -1,6 +1,6 @@
 import { DatabaseRecordId } from '@riao/dbal';
 
-export interface Principal {
+export type Principal = Record<string, any> & {
 	id?: DatabaseRecordId;
-	principal_name: string;
-}
+	login: string;
+};

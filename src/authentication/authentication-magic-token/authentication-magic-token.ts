@@ -8,39 +8,44 @@ import {
 import { Principal } from '../../../test/principal';
 import { Database, Migration } from '@riao/dbal';
 import { CreateMagicTokenTable } from './migrations/01-create-magic-token-table';
+import { AuthOptions } from '../../auth/auth';
+
+export interface MagicTokenAuthenticationOptions<TPrincipal extends Principal>
+	extends AuthOptions<TPrincipal> {
+	jwtOptions: JwtOptions;
+}
 
 export class MagicTokenAuthentication<
 	TPrincipal extends Principal = Principal,
 > extends AuthenticationBase<TPrincipal> {
 	protected jwt: Jwt<MagicTokenPayload>;
-	protected magicTokenColumn = 'magic_token';
+	protected magicTokenTable = 'magic_tokens';
+	protected tokenColumn = 'token';
 
-	public constructor(options: { jwtOptions: JwtOptions }) {
-		super();
+	public constructor(options: MagicTokenAuthenticationOptions<TPrincipal>) {
+		super(options);
 		this.jwt = new Jwt(options.jwtOptions);
 	}
 
 	public async createMagicToken(
-		credentials: { principal_name: string },
+		credentials: { login: string },
 		options: TokenOptions = defaultTokenOptions
 	): Promise<Token> {
 		const principal = await this.findActivePrincipal({
-			where: <any>{ [this.principalColumn]: credentials.principal_name },
+			where: <any>{
+				[this.loginColumn]: credentials.login,
+			},
 		});
 
 		if (principal === null) {
 			throw new Error('Principal not found or not active.');
 		}
 
-		const principalId = <string>(
-			principal[this.principalColumn as keyof TPrincipal]
-		);
-
 		// Generate & return token
 		return await this.jwt.generateToken(
 			{
 				type: 'magic-token',
-				principalId: principalId,
+				principalId: principal[this.principalIdColumn],
 			},
 			{
 				expiresIn: options.expiresIn,
@@ -60,7 +65,9 @@ export class MagicTokenAuthentication<
 
 		// Check principal
 		const principal = await this.findActivePrincipal({
-			where: <any>{ [this.principalColumn]: data.principalId },
+			where: <TPrincipal>{
+				[this.principalIdColumn]: data.principalId,
+			},
 		});
 
 		return principal;
@@ -70,8 +77,10 @@ export class MagicTokenAuthentication<
 		return {
 			...super.getMigrations(db),
 			'01-create-magic-token-table': new CreateMagicTokenTable(db, {
-				tableName: this.principalRepo.getTableName() ?? 'principals',
-				magicTokenColumnName: this.magicTokenColumn,
+				table: this.magicTokenTable,
+				tokenColumn: this.tokenColumn,
+				principalTable: this.principalTable,
+				principalIdColumn: this.principalIdColumn,
 			}),
 		};
 	}

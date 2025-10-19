@@ -20,9 +20,7 @@ export abstract class AuthenticationBase<
 			record: principal,
 		});
 
-		const identifier: string = this.principalRepo.getIdentifier() ?? 'id';
-
-		return inserted[identifier] as DatabaseRecordId;
+		return inserted[this.principalIdColumn] as DatabaseRecordId;
 	}
 
 	public abstract authenticate(credentials: any): Promise<TPrincipal | null>;

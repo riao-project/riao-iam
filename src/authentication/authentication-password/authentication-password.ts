@@ -1,14 +1,10 @@
-import {
-	Database,
-	DatabaseRecord,
-	DatabaseRecordId,
-	Migration,
-} from '@riao/dbal';
+import { Database, DatabaseRecordId, Migration } from '@riao/dbal';
 import { AuthenticationBase } from '../authentication-base';
 import { AddPasswordColumn } from './migrations/01-add-password-column';
+import { Principal } from '../../../test/principal';
 
 export abstract class PasswordAuthentication<
-	TPrincipal extends DatabaseRecord,
+	TPrincipal extends Principal,
 > extends AuthenticationBase<TPrincipal> {
 	protected passwordColumn = 'password';
 
@@ -30,7 +26,7 @@ export abstract class PasswordAuthentication<
 	): Promise<TPrincipal | null> {
 		const principal = await this.findActivePrincipal({
 			where: <TPrincipal>{
-				[this.principalColumn]: credentials[this.principalColumn],
+				[this.loginColumn]: credentials[this.loginColumn],
 			},
 		});
 
@@ -50,8 +46,8 @@ export abstract class PasswordAuthentication<
 		return {
 			...super.getMigrations(db),
 			'add-password-column': new AddPasswordColumn(db, {
-				tableName: this.principalRepo.getTableName() ?? 'principals',
-				passwordColumnName: this.passwordColumn,
+				table: this.principalTable,
+				passwordColumn: this.passwordColumn,
 			}),
 		};
 	}

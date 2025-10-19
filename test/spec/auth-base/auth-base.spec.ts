@@ -1,3 +1,4 @@
+import 'jasmine';
 import { Auth } from '../../../src/auth';
 import { Principal } from '../../principal';
 import { createDatabase, runMigrations } from '../../database';
@@ -11,7 +12,7 @@ describe('AuthBase', () => {
 
 	const auth = new (class extends Auth<Principal> {
 		protected override principalRepo = repo;
-	})();
+	})({ repo });
 
 	beforeAll(async () => {
 		await db.init();

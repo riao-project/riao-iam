@@ -6,37 +6,35 @@ import {
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
-interface CreatePrincipalTableMigrationOptions {
-	tableName?: string;
-	primaryKeyColumnName?: string;
-	principalColumnName?: string;
+export interface PrincipalTableOptions {
+	table: string;
+	principalIdColumn: string;
+	loginColumn: string;
 }
 
 export class CreatePrincipalTableMigration extends Migration {
-	protected override options: CreatePrincipalTableMigrationOptions = {
-		tableName: 'principals',
-		primaryKeyColumnName: 'id',
-		principalColumnName: 'principal_name',
+	protected override options: PrincipalTableOptions = {
+		table: 'principals',
+		principalIdColumn: 'id',
+		loginColumn: 'login',
 	};
 
-	public constructor(
-		db: Database,
-		options: CreatePrincipalTableMigrationOptions
-	) {
+	public constructor(db: Database, options: PrincipalTableOptions) {
 		super(db, options);
+		this.options = options;
 	}
 
 	override async up(): Promise<void> {
 		await this.ddl.createTable({
-			name: this.options.tableName!,
+			name: this.options.table,
 			columns: [
 				{
 					...BigIntKeyColumn,
-					name: this.options.primaryKeyColumnName!,
+					name: this.options.principalIdColumn,
 				},
 				{
 					...NameColumn,
-					name: this.options.principalColumnName!,
+					name: this.options.loginColumn,
 				},
 				{ ...CreateTimestampColumn },
 			],
@@ -45,7 +43,7 @@ export class CreatePrincipalTableMigration extends Migration {
 
 	override async down(): Promise<void> {
 		await this.ddl.dropTable({
-			tables: [this.options.tableName!],
+			tables: [this.options.table],
 		});
 	}
 }

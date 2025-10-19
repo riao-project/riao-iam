@@ -18,6 +18,7 @@ describe('Authentication - Magic Token', () => {
 	const auth = new (class extends MagicTokenAuthentication<Principal> {
 		protected override principalRepo = repo;
 	})({
+		repo,
 		jwtOptions: {
 			publicKey: keypair.publicKey,
 			privateKey: keypair.privateKey,
@@ -30,7 +31,7 @@ describe('Authentication - Magic Token', () => {
 		await runMigrations(db, auth);
 
 		await auth.createPrincipal({
-			principal_name: 'auth-passwordless@example.com',
+			login: 'auth-passwordless@example.com',
 		});
 	});
 
@@ -40,7 +41,7 @@ describe('Authentication - Magic Token', () => {
 
 	it('can login', async () => {
 		const email = 'auth-passwordless@example.com';
-		const token = await auth.createMagicToken({ principal_name: email });
+		const token = await auth.createMagicToken({ login: email });
 
 		// Wait a second to avoid not-before-time exception
 		await new Promise((a, r) => setTimeout(a, 1000));
@@ -48,20 +49,20 @@ describe('Authentication - Magic Token', () => {
 		const authenticated = await auth.authenticate({ token: token.token });
 
 		expect(authenticated).not.toBeNull();
-		expect(authenticated!.principal_name).toEqual(email);
+		expect(authenticated!.login).toEqual(email);
 	});
 
 	it('can reject wrong email', async () => {
 		const email = 'not_a_user@example.com';
 		await expectAsync(
-			auth.createMagicToken({ principal_name: email })
+			auth.createMagicToken({ login: email })
 		).toBeRejectedWithError('Principal not found or not active.');
 	});
 
 	it('can reject wrong token', async () => {
 		const email = 'auth-passwordless@example.com';
 		const tokenObj: Token = await auth.createMagicToken({
-			principal_name: email,
+			login: email,
 		});
 
 		// Simulate a bad token by changing one letter to a 9
