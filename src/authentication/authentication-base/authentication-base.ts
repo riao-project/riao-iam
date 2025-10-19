@@ -7,9 +7,17 @@ export abstract class AuthenticationBase<
 > extends Auth<TPrincipal> {
 	protected hash: Hash = new Hash();
 
-	public abstract createPrincipal(
+	public async createPrincipal(
 		principal: TPrincipal
-	): Promise<DatabaseRecordId>;
+	): Promise<DatabaseRecordId> {
+		const inserted = await this.principalRepo.insertOne({
+			record: principal,
+		});
+
+		const identifier: string = this.principalRepo.getIdentifier() ?? 'id';
+
+		return inserted[identifier] as DatabaseRecordId;
+	}
 
 	public abstract authenticate(credentials: any): Promise<boolean>;
 }

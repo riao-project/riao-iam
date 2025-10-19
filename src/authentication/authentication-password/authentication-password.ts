@@ -12,20 +12,17 @@ export abstract class PasswordAuthentication<
 > extends AuthenticationBase<TPrincipal> {
 	protected passwordColumn = 'password';
 
-	public async createPrincipal(
+	public override async createPrincipal(
 		principal: TPrincipal
 	): Promise<DatabaseRecordId> {
 		const hash = await this.hash.make(
 			principal[this.passwordColumn] as string
 		);
 
-		const inserted = await this.principalRepo.insertOne({
-			record: { ...principal, [this.passwordColumn]: hash },
+		return await super.createPrincipal({
+			...principal,
+			[this.passwordColumn]: hash,
 		});
-
-		const identifier: string = this.principalRepo.getIdentifier() ?? 'id';
-
-		return inserted[identifier] as DatabaseRecordId;
 	}
 
 	public async authenticate(
