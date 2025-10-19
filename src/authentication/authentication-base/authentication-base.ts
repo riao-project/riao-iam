@@ -1,4 +1,10 @@
-import { DatabaseRecord, DatabaseRecordId } from '@riao/dbal';
+import {
+	and,
+	DatabaseRecord,
+	DatabaseRecordId,
+	Expression,
+	SelectQuery,
+} from '@riao/dbal';
 import { Auth } from '../../auth/auth';
 import { Hash } from '../../hash';
 
@@ -20,4 +26,27 @@ export abstract class AuthenticationBase<
 	}
 
 	public abstract authenticate(credentials: any): Promise<boolean>;
+
+	public async findActivePrincipal(
+		query: SelectQuery<TPrincipal>
+	): Promise<TPrincipal | null> {
+		const isActiveQuery = this.isActiveQuery();
+
+		if (query.where && isActiveQuery !== undefined) {
+			query.where = [isActiveQuery, and, query.where];
+		}
+		else if (isActiveQuery !== undefined) {
+			query.where = isActiveQuery;
+		}
+
+		const principal = await this.principalRepo.findOne({
+			...query,
+		});
+
+		return principal;
+	}
+
+	protected isActiveQuery(): undefined | Expression<TPrincipal> {
+		return undefined;
+	}
 }

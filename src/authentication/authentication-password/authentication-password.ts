@@ -28,8 +28,10 @@ export abstract class PasswordAuthentication<
 	public async authenticate(
 		credentials: Partial<TPrincipal>
 	): Promise<boolean> {
-		const principal = await this.principalRepo.findOne({
-			[this.principalColumn]: credentials[this.principalColumn],
+		const principal = await this.findActivePrincipal({
+			where: <TPrincipal>{
+				[this.principalColumn]: credentials[this.principalColumn],
+			},
 		});
 
 		if (!principal) {

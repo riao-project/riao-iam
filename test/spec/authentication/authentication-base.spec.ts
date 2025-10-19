@@ -39,4 +39,16 @@ describe('Authentication - Base', () => {
 
 		expect(principal.id).toEqual(1);
 	});
+
+	it('can find active principal', async () => {
+		await auth.createPrincipal({
+			principal_name: 'active_principal_test',
+		});
+
+		const principal = await auth.findActivePrincipal({
+			where: { principal_name: 'active_principal_test' },
+		});
+
+		expect(principal?.principal_name).toEqual('active_principal_test');
+	});
 });
