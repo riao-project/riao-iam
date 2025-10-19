@@ -1,8 +1,8 @@
 import { ColumnType, Database } from '@riao/dbal';
 import {
+	BigIntKeyColumn,
 	CreateTimestampColumn,
 	PasswordColumn,
-	UUIDKeyColumn,
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
@@ -29,7 +29,7 @@ export class CreateMagicTokenTable extends Migration {
 		await this.ddl.createTable({
 			name: this.options.table!,
 			columns: [
-				UUIDKeyColumn,
+				BigIntKeyColumn,
 				CreateTimestampColumn,
 				{
 					name: 'type',

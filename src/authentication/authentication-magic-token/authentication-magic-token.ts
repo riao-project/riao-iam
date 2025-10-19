@@ -3,10 +3,11 @@ import { Token, Jwt, JwtOptions } from '../../jwt';
 import {
 	defaultTokenOptions,
 	MagicTokenPayload,
+	MagicTokenRecord,
 	TokenOptions,
 } from './magic-token';
 import { Principal } from '../../../test/principal';
-import { Database, Migration } from '@riao/dbal';
+import { Database, Migration, QueryRepository } from '@riao/dbal';
 import { CreateMagicTokenTable } from './migrations/01-create-magic-token-table';
 import { AuthOptions } from '../../auth/auth';
 
@@ -21,6 +22,7 @@ export class MagicTokenAuthentication<
 	protected jwt: Jwt<MagicTokenPayload>;
 	protected magicTokenTable = 'magic_tokens';
 	protected tokenColumn = 'token';
+	protected magicTokenRepo: QueryRepository<MagicTokenRecord>;
 
 	public constructor(options: MagicTokenAuthenticationOptions<TPrincipal>) {
 		super(options);
@@ -29,7 +31,10 @@ export class MagicTokenAuthentication<
 
 	public async createMagicToken(
 		credentials: { login: string },
-		options: TokenOptions = defaultTokenOptions
+		options: TokenOptions & { type: string } = {
+			...defaultTokenOptions,
+			type: 'auth',
+		}
 	): Promise<Token> {
 		const principal = await this.findActivePrincipal({
 			where: <any>{
@@ -41,8 +46,10 @@ export class MagicTokenAuthentication<
 			throw new Error('Principal not found or not active.');
 		}
 
-		// Generate & return token
-		return await this.jwt.generateToken(
+		const principalId = principal[this.principalIdColumn];
+
+		// Generate token
+		const token = await this.jwt.generateToken(
 			{
 				type: 'magic-token',
 				principalId: principal[this.principalIdColumn],
@@ -51,10 +58,21 @@ export class MagicTokenAuthentication<
 				expiresIn: options.expiresIn,
 			}
 		);
+
+		await this.magicTokenRepo.insertOne({
+			record: {
+				principal_id: principalId,
+				token: token.token,
+				type: options.type,
+			},
+		});
+
+		return token;
 	}
 
 	public async authenticate(credentials: {
 		token: string;
+		type: string;
 	}): Promise<TPrincipal | null> {
 		// Verify magic token
 		const data = await this.jwt.decodeToken(credentials.token);
@@ -68,6 +86,24 @@ export class MagicTokenAuthentication<
 			where: <TPrincipal>{
 				[this.principalIdColumn]: data.principalId,
 			},
+		});
+
+		// Check token exists
+		const tokenRecord = await this.magicTokenRepo.findOne({
+			where: {
+				principal_id: data.principalId,
+				token: credentials.token,
+				type: credentials.type,
+			},
+		});
+
+		if (!tokenRecord) {
+			throw new Error('Token is invalid or expired.');
+		}
+
+		// Delete token
+		await this.magicTokenRepo.delete({
+			where: { id: tokenRecord.id },
 		});
 
 		return principal;

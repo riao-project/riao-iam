@@ -13,3 +13,11 @@ export interface MagicTokenPayload {
 	type: 'magic-token';
 	principalId: DatabaseRecordId;
 }
+
+export interface MagicTokenRecord {
+	id: DatabaseRecordId;
+	principal_id: DatabaseRecordId;
+	created_at: Date;
+	type: string;
+	token: string;
+}
