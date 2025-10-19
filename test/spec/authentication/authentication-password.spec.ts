@@ -49,12 +49,17 @@ describe('Authentication - Password', () => {
 			password: 'password123',
 		});
 
-		const isAuthenticated = await auth.authenticate({
+		const authenticated = await auth.authenticate({
 			principal_name: 'correct_test',
 			password: 'password123',
 		});
 
-		expect(isAuthenticated).toBe(true);
+		if (authenticated === null) {
+			throw new Error('Authentication failed');
+		}
+
+		expect(authenticated.id).toBeGreaterThanOrEqual(1);
+		expect(authenticated.principal_name).toEqual('correct_test');
 	});
 
 	it('should fail authentication with incorrect credentials', async () => {
@@ -63,11 +68,11 @@ describe('Authentication - Password', () => {
 			password: 'password123',
 		});
 
-		const isAuthenticated = await auth.authenticate({
+		const authenticated = await auth.authenticate({
 			principal_name: 'incorrect_test',
 			password: 'wrongpassword',
 		});
 
-		expect(isAuthenticated).toBe(false);
+		expect(authenticated).toBeNull();
 	});
 });

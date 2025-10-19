@@ -27,7 +27,7 @@ export abstract class PasswordAuthentication<
 
 	public async authenticate(
 		credentials: Partial<TPrincipal>
-	): Promise<boolean> {
+	): Promise<TPrincipal | null> {
 		const principal = await this.findActivePrincipal({
 			where: <TPrincipal>{
 				[this.principalColumn]: credentials[this.principalColumn],
@@ -35,7 +35,7 @@ export abstract class PasswordAuthentication<
 		});
 
 		if (!principal) {
-			return false;
+			return null;
 		}
 
 		const isValid = await this.hash.check(
@@ -43,7 +43,7 @@ export abstract class PasswordAuthentication<
 			principal[this.passwordColumn] as string
 		);
 
-		return isValid;
+		return isValid ? principal : null;
 	}
 
 	public override getMigrations(db: Database): Record<string, Migration> {

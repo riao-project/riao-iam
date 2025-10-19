@@ -12,8 +12,8 @@ describe('Authentication - Base', () => {
 	const auth = new (class extends AuthenticationBase<Principal> {
 		protected override principalRepo = repo;
 
-		public async authenticate(credentials: any): Promise<boolean> {
-			return false;
+		public async authenticate(credentials: any): Promise<Principal | null> {
+			return null;
 		}
 	})();
 

@@ -25,7 +25,7 @@ export abstract class AuthenticationBase<
 		return inserted[identifier] as DatabaseRecordId;
 	}
 
-	public abstract authenticate(credentials: any): Promise<boolean>;
+	public abstract authenticate(credentials: any): Promise<TPrincipal | null>;
 
 	public async findActivePrincipal(
 		query: SelectQuery<TPrincipal>
