@@ -1,7 +1,7 @@
 import 'jasmine';
 
 import { createDatabase, runMigrations } from '../../database';
-import { Principal } from '../../principal';
+import { Account } from '../../account';
 import { Token } from '../../../src/jwt';
 import { KeyPairGenerator } from '../../../src/keypair';
 import { MagicTokenAuthentication } from '../../../src/authentication/authentication-magic-token';
@@ -10,8 +10,8 @@ import { MagicTokenRecord } from '../../../src/authentication/authentication-mag
 
 describe('Authentication - Magic Token', () => {
 	const db = createDatabase('authentication-magic-token');
-	const repo = db.getQueryRepository<Principal>({
-		table: 'principals',
+	const repo = db.getQueryRepository<Account>({
+		table: 'accounts',
 		identifiedBy: 'id',
 	});
 	const tokenRepo = db.getQueryRepository<MagicTokenRecord>({
@@ -21,8 +21,8 @@ describe('Authentication - Magic Token', () => {
 
 	const keypair = new KeyPairGenerator({ algorithm: 'ES512' }).generate();
 
-	const auth = new (class extends MagicTokenAuthentication<Principal> {
-		protected override principalRepo = repo;
+	const auth = new (class extends MagicTokenAuthentication<Account> {
+		protected override accountRepo = repo;
 		protected override magicTokenRepo = tokenRepo;
 	})({
 		repo,
@@ -37,7 +37,7 @@ describe('Authentication - Magic Token', () => {
 		await db.init();
 		await runMigrations(db, auth);
 
-		await auth.createPrincipal({
+		await auth.createAccount({
 			login: 'auth-passwordless@example.com',
 		});
 	});
@@ -66,7 +66,7 @@ describe('Authentication - Magic Token', () => {
 		const email = 'not_a_user@example.com';
 		await expectAsync(
 			auth.createMagicToken({ login: email })
-		).toBeRejectedWithError('Principal not found or not active.');
+		).toBeRejectedWithError('Account not found or not active.');
 	});
 
 	it('can reject wrong token', async () => {
@@ -88,7 +88,7 @@ describe('Authentication - Magic Token', () => {
 
 	it('cannot use token twice', async () => {
 		const email = 'once@example.com';
-		await auth.createPrincipal({ login: email });
+		await auth.createAccount({ login: email });
 
 		const tokenObj: Token = await auth.createMagicToken({
 			login: email,

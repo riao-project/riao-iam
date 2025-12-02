@@ -1,10 +1,10 @@
-import { Principal } from '../../../../test/principal';
+import { Account } from '../../../../test/account';
 import { QueryRepository } from '@riao/dbal';
 
 /**
- * User interface extending Principal with display name
+ * User interface extending Account with display name
  */
-export interface User extends Principal {
+export interface User extends Account {
 	display_name: string;
 }
 

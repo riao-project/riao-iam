@@ -1,5 +1,5 @@
 import { DatabaseRecordId, QueryRepository } from '@riao/dbal';
-import { Principal } from '../../../test/principal';
+import { Account } from '../../../test/account';
 import { AuthenticationBase } from '../authentication-base';
 import { Database, Migration } from '@riao/dbal';
 import {
@@ -25,7 +25,7 @@ import { AuthOptions } from '../../auth/auth';
 
 interface StoredChallenge {
 	challenge_id: string;
-	principal_id: DatabaseRecordId;
+	account_id: DatabaseRecordId;
 	challenge_type: 'registration' | 'authentication';
 	expires_at: Date;
 	used: boolean;
@@ -34,7 +34,7 @@ interface StoredChallenge {
 
 interface AuthenticatorCredential {
 	credential_id: string;
-	principal_id: DatabaseRecordId;
+	account_id: DatabaseRecordId;
 	public_key: string;
 	counter: number;
 	transports?: string;
@@ -45,12 +45,11 @@ interface AuthenticatorCredential {
 
 interface Fido2Credentials {
 	response: AuthenticationResponseJSON;
-	principalId: DatabaseRecordId;
+	accountId: DatabaseRecordId;
 }
 
-export interface Fido2AuthenticationOptions<
-	TPrincipal extends Principal = Principal,
-> extends AuthOptions<TPrincipal> {
+export interface Fido2AuthenticationOptions<TAccount extends Account = Account>
+	extends AuthOptions<TAccount> {
 	db: Database;
 	rpName: string;
 	rpID: string;
@@ -58,8 +57,8 @@ export interface Fido2AuthenticationOptions<
 }
 
 export class Fido2Authentication<
-	TPrincipal extends Principal,
-> extends AuthenticationBase<TPrincipal> {
+	TAccount extends Account,
+> extends AuthenticationBase<TAccount> {
 	protected readonly rpName: string;
 	protected readonly rpID: string;
 	protected readonly origin: string;
@@ -70,7 +69,7 @@ export class Fido2Authentication<
 	protected challengeRepo: QueryRepository<StoredChallenge>;
 	protected credentialRepo: QueryRepository<AuthenticatorCredential>;
 
-	constructor(options: Fido2AuthenticationOptions<TPrincipal>) {
+	constructor(options: Fido2AuthenticationOptions<TAccount>) {
 		super(options);
 
 		this.rpName = options.rpName;
@@ -88,30 +87,30 @@ export class Fido2Authentication<
 	}
 
 	public async generateRegistrationOptions(
-		principal: TPrincipal
+		account: TAccount
 	): Promise<PublicKeyCredentialCreationOptionsJSON> {
-		if (!principal[this.principalIdColumn]) {
-			throw new Error('Principal must have an ID');
+		if (!account[this.accountIdColumn]) {
+			throw new Error('Account must have an ID');
 		}
 
-		const principalId = principal[this.principalIdColumn].toString();
-		const login = principal[this.loginColumn] || principalId;
+		const accountId = account[this.accountIdColumn].toString();
+		const login = account[this.loginColumn] || accountId;
 		// TODO: Display name?
-		const principalName = principal[this.loginColumn] || principalId;
+		const accountName = account[this.loginColumn] || accountId;
 
 		const options: GenerateRegistrationOptionsOpts = {
 			rpName: this.rpName,
 			rpID: this.rpID,
-			userID: new Uint8Array(Buffer.from(principalId, 'utf8')),
+			userID: new Uint8Array(Buffer.from(accountId, 'utf8')),
 			userName: login,
-			userDisplayName: principalName,
+			userDisplayName: accountName,
 			attestationType: 'none',
 			authenticatorSelection: {
 				// Allow both platform and cross-platform authenticators
 				userVerification: 'preferred',
 				requireResidentKey: false,
 			},
-			excludeCredentials: await this.getExistingCredentials(principalId),
+			excludeCredentials: await this.getExistingCredentials(accountId),
 		};
 
 		const registrationOptions = await generateRegistrationOptions(options);
@@ -121,7 +120,7 @@ export class Fido2Authentication<
 			records: [
 				{
 					challenge_id: registrationOptions.challenge,
-					principal_id: principal[this.principalIdColumn],
+					account_id: account[this.accountIdColumn],
 					challenge_type: 'registration',
 					expires_at: expiresAt,
 					used: false,
@@ -133,17 +132,17 @@ export class Fido2Authentication<
 	}
 
 	public async verifyRegistration(
-		principal: TPrincipal,
+		account: TAccount,
 		response: RegistrationResponseJSON
 	): Promise<{ verified: boolean; registrationInfo?: object }> {
-		if (!principal[this.principalIdColumn]) {
-			throw new Error('Principal must have an ID');
+		if (!account[this.accountIdColumn]) {
+			throw new Error('Account must have an ID');
 		}
 
 		// Find the challenge from database
 		const challengesRaw = await this.challengeRepo.find({
 			where: {
-				principal_id: principal[this.principalIdColumn],
+				account_id: account[this.accountIdColumn],
 				challenge_type: 'registration',
 				used: false,
 			},
@@ -184,7 +183,7 @@ export class Fido2Authentication<
 						{
 							// Use the original credential ID from the response
 							credential_id: response.id,
-							principal_id: principal[this.principalIdColumn],
+							account_id: account[this.accountIdColumn],
 							public_key: Buffer.from(
 								credential.publicKey
 							).toString('base64'),
@@ -237,7 +236,7 @@ export class Fido2Authentication<
 				records: [
 					{
 						challenge_id: authenticationOptions.challenge,
-						principal_id: userID,
+						account_id: userID,
 						challenge_type: 'authentication',
 						expires_at: expiresAt,
 						used: false,
@@ -249,34 +248,34 @@ export class Fido2Authentication<
 		return authenticationOptions;
 	}
 
-	public override async createPrincipal(
-		principal: TPrincipal
+	public override async createAccount(
+		account: TAccount
 	): Promise<DatabaseRecordId> {
-		// Store principal data first
-		const principalId = await super.createPrincipal(principal);
+		// Store account data first
+		const accountId = await super.createAccount(account);
 
-		// Create a principal object with the ID for registration options
-		const principalWithId = {
-			...principal,
-			[this.principalIdColumn]: principalId,
-		} as TPrincipal;
+		// Create a account object with the ID for registration options
+		const accountWithId = {
+			...account,
+			[this.accountIdColumn]: accountId,
+		} as TAccount;
 
 		// Generate and return registration options for client
 		// Credential stored when verifyRegistration is called
-		await this.generateRegistrationOptions(principalWithId);
+		await this.generateRegistrationOptions(accountWithId);
 
-		return principalId;
+		return accountId;
 	}
 
 	public override async authenticate(
 		credentials: Fido2Credentials
-	): Promise<TPrincipal | null> {
-		const { response, principalId } = credentials;
+	): Promise<TAccount | null> {
+		const { response, accountId } = credentials;
 
 		// Find the challenge from database
 		const challengesRaw = await this.challengeRepo.find({
 			where: {
-				principal_id: principalId,
+				account_id: accountId,
 				challenge_type: 'authentication',
 				used: false,
 			},
@@ -331,15 +330,15 @@ export class Fido2Authentication<
 			where: { challenge_id: storedChallenge.challenge_id },
 		});
 
-		// Retrieve and return the principal
-		return await this.findActivePrincipal({
-			where: <TPrincipal>{
-				[this.principalIdColumn]: principalId,
+		// Retrieve and return the account
+		return await this.findActiveAccount({
+			where: <TAccount>{
+				[this.accountIdColumn]: accountId,
 			},
 		});
 	}
 
-	protected async getExistingCredentials(principalId: string): Promise<
+	protected async getExistingCredentials(accountId: string): Promise<
 		{
 			id: string;
 			type: 'public-key';
@@ -347,7 +346,7 @@ export class Fido2Authentication<
 		}[]
 	> {
 		const credentials = await this.credentialRepo.find({
-			where: { principal_id: principalId },
+			where: { account_id: accountId },
 		});
 
 		return credentials.map((cred) => {
@@ -391,14 +390,14 @@ export class Fido2Authentication<
 			'create-fido2-credentials-table':
 				new CreateFido2CredentialsTableMigration(db, {
 					table: this.credentialTable,
-					principalTable: this.principalTable,
-					principalTableIdColumn: this.principalIdColumn,
+					accountTable: this.accountTable,
+					accountTableIdColumn: this.accountIdColumn,
 				}),
 			'create-fido2-challenges-table':
 				new CreateFido2ChallengesTableMigration(db, {
 					table: this.challengeTable,
-					principalTable: this.principalTable,
-					principalTableIdColumn: this.principalIdColumn,
+					accountTable: this.accountTable,
+					accountTableIdColumn: this.accountIdColumn,
 				}),
 		};
 	}

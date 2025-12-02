@@ -1,17 +1,17 @@
 import 'jasmine';
 import { Auth } from '../../../src/auth';
-import { Principal } from '../../principal';
+import { Account } from '../../account';
 import { createDatabase, runMigrations } from '../../database';
 
 describe('AuthBase', () => {
 	const db = createDatabase('auth-base');
-	const repo = db.getQueryRepository<Principal>({
-		table: 'principals',
+	const repo = db.getQueryRepository<Account>({
+		table: 'accounts',
 		identifiedBy: 'id',
 	});
 
-	const auth = new (class extends Auth<Principal> {
-		protected override principalRepo = repo;
+	const auth = new (class extends Auth<Account> {
+		protected override accountRepo = repo;
 	})({ repo });
 
 	beforeAll(async () => {
@@ -19,9 +19,9 @@ describe('AuthBase', () => {
 		await runMigrations(db, auth);
 	});
 
-	it('should create principal table', async () => {
+	it('should create account table', async () => {
 		const tables = (await db.getSchema()).tables;
-		const hasTable = Object.keys(tables).includes('principals');
+		const hasTable = Object.keys(tables).includes('accounts');
 		expect(hasTable).toBe(true);
 	});
 });

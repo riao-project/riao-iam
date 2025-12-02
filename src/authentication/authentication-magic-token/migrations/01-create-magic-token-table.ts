@@ -9,16 +9,16 @@ import { Migration } from '@riao/dbal';
 interface CreateMagicTokenTableOptions {
 	table?: string;
 	tokenColumn?: string;
-	principalTable?: string;
-	principalIdColumn?: string;
+	accountTable?: string;
+	accountIdColumn?: string;
 }
 
 export class CreateMagicTokenTable extends Migration {
 	protected override options: CreateMagicTokenTableOptions = {
 		table: 'magic_tokens',
 		tokenColumn: 'token',
-		principalTable: 'principals',
-		principalIdColumn: 'id',
+		accountTable: 'accounts',
+		accountIdColumn: 'id',
 	};
 
 	public constructor(db: Database, options: CreateMagicTokenTableOptions) {
@@ -38,13 +38,13 @@ export class CreateMagicTokenTable extends Migration {
 					required: true,
 				},
 				{
-					name: 'principal_id',
+					name: 'account_id',
 					type: ColumnType.VARCHAR,
 					length: 255,
 					required: true,
 					fk: {
-						referencesTable: this.options.principalTable!,
-						referencesColumn: this.options.principalIdColumn!,
+						referencesTable: this.options.accountTable!,
+						referencesColumn: this.options.accountIdColumn!,
 						onDelete: 'CASCADE',
 					},
 				},

@@ -26,7 +26,7 @@ This FIDO2 implementation provides passwordless authentication using WebAuthn st
 
 - ✅ Complete WebAuthn registration and authentication flows
 - ✅ Database persistence with proper challenge lifecycle management
-- ✅ Multi-credential support per principal
+- ✅ Multi-credential support per account
 - ✅ Automatic challenge expiration and cleanup
 - ✅ Integration with riao framework
 - ✅ Type-safe TypeScript implementation
@@ -62,7 +62,7 @@ The `Fido2Authentication` class requires configuration for your Relying Party (R
 - **`rpName`**: Your application name (shown to users)
 - **`rpID`**: Your domain (must match the origin domain)  
 - **`origin`**: Your application URL (must be HTTPS in production)
-- **`repo`**: Principal repository for user management
+- **`repo`**: Account repository for user management
 - **`db`**: Database instance for challenge/credential storage
 
 > 🔍 **Type Definitions**: See [`Fido2AuthenticationOptions`](./authentication-fido2.ts) interface for complete configuration options.
@@ -72,15 +72,15 @@ The `Fido2Authentication` class requires configuration for your Relying Party (R
 The implementation provides methods for the complete FIDO2 lifecycle:
 
 #### Registration Flow
-- **`generateRegistrationOptions(principal)`**: Creates WebAuthn registration options and stores challenge
-- **`verifyRegistration(principal, response)`**: Verifies WebAuthn response and stores credential
+- **`generateRegistrationOptions(account)`**: Creates WebAuthn registration options and stores challenge
+- **`verifyRegistration(account, response)`**: Verifies WebAuthn response and stores credential
 
 #### Authentication Flow  
 - **`generateAuthenticationOptions(userID?)`**: Creates authentication challenge (with or without specific user)
-- **`authenticate(credentials)`**: Verifies authentication response and returns principal
+- **`authenticate(credentials)`**: Verifies authentication response and returns account
 
-#### Principal Management
-- **`createPrincipal(principal)`**: Creates user and auto-generates registration challenge
+#### Account Management
+- **`createAccount(account)`**: Creates user and auto-generates registration challenge
 
 > 📚 **Method Details**: See the [class implementation](./authentication-fido2.ts)
 
@@ -97,13 +97,13 @@ Enroll a new authenticator (fingerprint, security key, etc.) for a user .
 
 ```typescript
 // 1. Server generates options
-const options = await auth.generateRegistrationOptions(principal);
+const options = await auth.generateRegistrationOptions(account);
 
 // 2. Client creates credential (browser WebAuthn API)  
 const credential = await navigator.credentials.create({ publicKey: options });
 
 // 3. Server verifies and stores
-const result = await auth.verifyRegistration(principal, credential);
+const result = await auth.verifyRegistration(account, credential);
 ```
 
 ### Authentication Flow
@@ -123,7 +123,7 @@ const options = await auth.generateAuthenticationOptions(userID); // or no param
 const assertion = await navigator.credentials.get({ publicKey: options });
 
 // 3. Server verifies signature
-const principal = await auth.authenticate({ response: assertion, principalId: userID });
+const account = await auth.authenticate({ response: assertion, accountId: userID });
 ```
 
 ## Usage Examples
@@ -135,7 +135,7 @@ import { Fido2Authentication } from './authentication-fido2';
 
 // Configure for your application
 const fido2Auth = new Fido2Authentication({
-  repo: principalRepo,        // Your user repository  
+  repo: accountRepo,        // Your user repository  
   db,                         // RIAO database instance
   rpName: 'My App',          // Shown to users during registration
   rpID: 'myapp.com',         // Your domain
@@ -167,7 +167,7 @@ await db.runMigrations(migrations);
 
 - **Counter Protection**: Authenticator counters prevent replay attacks
 - **Public Key Security**: Only public keys are stored, never private keys
-- **Cascade Deletion**: Credentials are automatically cleaned up when principals are deleted
+- **Cascade Deletion**: Credentials are automatically cleaned up when accounts are deleted
 
 ### Transport Security
 

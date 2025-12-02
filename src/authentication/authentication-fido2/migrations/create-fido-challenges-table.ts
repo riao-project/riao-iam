@@ -5,24 +5,24 @@ import { Migration } from '@riao/dbal';
 export interface Fido2ChallengesTableOptions {
 	table: string;
 	challengeIdColumn: string;
-	principalIdColumn: string;
+	accountIdColumn: string;
 	challengeTypeColumn: string;
 	expiresAtColumn: string;
 	usedColumn: string;
-	principalTable: string;
-	principalTableIdColumn: string;
+	accountTable: string;
+	accountTableIdColumn: string;
 }
 
 export class CreateFido2ChallengesTableMigration extends Migration {
 	protected override options: Fido2ChallengesTableOptions = {
 		table: 'fido2_challenges',
 		challengeIdColumn: 'challenge_id',
-		principalIdColumn: 'principal_id',
+		accountIdColumn: 'account_id',
 		challengeTypeColumn: 'challenge_type',
 		expiresAtColumn: 'expires_at',
 		usedColumn: 'used',
-		principalTable: 'principals',
-		principalTableIdColumn: 'id',
+		accountTable: 'accounts',
+		accountTableIdColumn: 'id',
 	};
 
 	public constructor(
@@ -44,14 +44,14 @@ export class CreateFido2ChallengesTableMigration extends Migration {
 					length: 512,
 					primaryKey: true,
 				},
-				// Reference to the principal who owns this challenge
+				// Reference to the account who owns this challenge
 				{
-					name: this.options.principalIdColumn,
+					name: this.options.accountIdColumn,
 					type: ColumnType.BIGINT,
 					required: true,
 					fk: {
-						referencesTable: this.options.principalTable,
-						referencesColumn: this.options.principalTableIdColumn,
+						referencesTable: this.options.accountTable,
+						referencesColumn: this.options.accountTableIdColumn,
 						onDelete: 'CASCADE',
 					},
 				},

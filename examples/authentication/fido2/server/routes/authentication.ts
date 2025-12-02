@@ -49,7 +49,7 @@ export function createAuthenticationRoutes(
 				return res.status(400).json({ error: 'Assertion is required' });
 			}
 
-			let principalId: string;
+			let accountId: string;
 
 			if (login) {
 				// Find user by login
@@ -57,7 +57,7 @@ export function createAuthenticationRoutes(
 				if (!user) {
 					return res.status(400).json({ error: 'User not found' });
 				}
-				principalId = user.id!.toString();
+				accountId = user.id!.toString();
 			}
 			else {
 				// Extract user ID from assertion if login not provided
@@ -68,7 +68,7 @@ export function createAuthenticationRoutes(
 			// Verify authentication
 			const user = await fido2Auth.authenticate({
 				response: assertion,
-				principalId,
+				accountId,
 			});
 
 			if (user) {

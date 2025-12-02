@@ -4,27 +4,27 @@ import {
 	Migration,
 	QueryRepository,
 } from '@riao/dbal';
-import { CreatePrincipalTableMigration } from './migrations/01-create-principal-table';
+import { CreateAccountsTableMigration } from './migrations/001-create-accounts-table';
 
-export interface AuthOptions<TPrincipal extends DatabaseRecord> {
-	repo: QueryRepository<TPrincipal>;
+export interface AuthOptions<TAccount extends DatabaseRecord> {
+	repo: QueryRepository<TAccount>;
 }
 
-export abstract class Auth<TPrincipal extends DatabaseRecord> {
-	protected principalRepo: QueryRepository<TPrincipal>;
-	protected principalTable = 'principals';
-	protected principalIdColumn = 'id';
+export abstract class Auth<TAccount extends DatabaseRecord> {
+	protected accountRepo: QueryRepository<TAccount>;
+	protected accountTable = 'accounts';
+	protected accountIdColumn = 'id';
 	protected loginColumn = 'login';
 
-	public constructor(options: AuthOptions<TPrincipal>) {
-		this.principalRepo = options.repo;
+	public constructor(options: AuthOptions<TAccount>) {
+		this.accountRepo = options.repo;
 	}
 
 	public getMigrations(db: Database): Record<string, Migration> {
 		return {
-			'01-create-principal-table': new CreatePrincipalTableMigration(db, {
-				table: this.principalTable,
-				principalIdColumn: this.principalIdColumn,
+			'001-create-accounts-table': new CreateAccountsTableMigration(db, {
+				table: this.accountTable,
+				accountIdColumn: this.accountIdColumn,
 				loginColumn: this.loginColumn,
 			}),
 		};

@@ -1,21 +1,21 @@
 import { PasswordAuthentication } from '../../../src/authentication/authentication-password';
 import { createDatabase, runMigrations } from '../../database';
-import { Principal } from '../../principal';
+import { Account } from '../../account';
 import { compare } from 'bcrypt';
 
-interface PasswordPrincipal extends Principal {
+interface PasswordAccount extends Account {
 	password: string;
 }
 
 describe('Authentication - Password', () => {
 	const db = createDatabase('authentication-password');
-	const repo = db.getQueryRepository<PasswordPrincipal>({
-		table: 'principals',
+	const repo = db.getQueryRepository<PasswordAccount>({
+		table: 'accounts',
 		identifiedBy: 'id',
 	});
 
-	const auth = new (class extends PasswordAuthentication<PasswordPrincipal> {
-		protected override principalRepo = repo;
+	const auth = new (class extends PasswordAuthentication<PasswordAccount> {
+		protected override accountRepo = repo;
 	})({ repo });
 
 	beforeAll(async () => {
@@ -27,24 +27,24 @@ describe('Authentication - Password', () => {
 		await db.disconnect();
 	});
 
-	it('should create a principal with a hashed password', async () => {
-		await auth.createPrincipal({
-			login: 'create_principal_test',
+	it('should create a account with a hashed password', async () => {
+		await auth.createAccount({
+			login: 'create_account_test',
 			password: 'password123',
 		});
 
-		const principal = await repo.findOne({ where: { id: '1' } });
+		const account = await repo.findOne({ where: { id: '1' } });
 
-		if (!principal) {
-			throw new Error('Principal not found');
+		if (!account) {
+			throw new Error('Account not found');
 		}
 
-		expect(principal.id).toEqual(1);
-		expect(await compare('password123', principal.password)).toEqual(true);
+		expect(account.id).toEqual(1);
+		expect(await compare('password123', account.password)).toEqual(true);
 	});
 
-	it('should authenticate a principal with correct credentials', async () => {
-		await auth.createPrincipal({
+	it('should authenticate a account with correct credentials', async () => {
+		await auth.createAccount({
 			login: 'correct_test',
 			password: 'password123',
 		});
@@ -63,7 +63,7 @@ describe('Authentication - Password', () => {
 	});
 
 	it('should fail authentication with incorrect credentials', async () => {
-		await auth.createPrincipal({
+		await auth.createAccount({
 			login: 'incorrect_test',
 			password: 'password123',
 		});

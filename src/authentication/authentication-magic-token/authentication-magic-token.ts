@@ -6,25 +6,25 @@ import {
 	MagicTokenRecord,
 	TokenOptions,
 } from './magic-token';
-import { Principal } from '../../../test/principal';
+import { Account } from '../../../test/account';
 import { Database, Migration, QueryRepository } from '@riao/dbal';
 import { CreateMagicTokenTable } from './migrations/01-create-magic-token-table';
 import { AuthOptions } from '../../auth/auth';
 
-export interface MagicTokenAuthenticationOptions<TPrincipal extends Principal>
-	extends AuthOptions<TPrincipal> {
+export interface MagicTokenAuthenticationOptions<TAccount extends Account>
+	extends AuthOptions<TAccount> {
 	jwtOptions: JwtOptions;
 }
 
 export class MagicTokenAuthentication<
-	TPrincipal extends Principal = Principal,
-> extends AuthenticationBase<TPrincipal> {
+	TAccount extends Account = Account,
+> extends AuthenticationBase<TAccount> {
 	protected jwt: Jwt<MagicTokenPayload>;
 	protected magicTokenTable = 'magic_tokens';
 	protected tokenColumn = 'token';
 	protected magicTokenRepo: QueryRepository<MagicTokenRecord>;
 
-	public constructor(options: MagicTokenAuthenticationOptions<TPrincipal>) {
+	public constructor(options: MagicTokenAuthenticationOptions<TAccount>) {
 		super(options);
 		this.jwt = new Jwt(options.jwtOptions);
 	}
@@ -36,23 +36,23 @@ export class MagicTokenAuthentication<
 			type: 'auth',
 		}
 	): Promise<Token> {
-		const principal = await this.findActivePrincipal({
+		const account = await this.findActiveAccount({
 			where: <any>{
 				[this.loginColumn]: credentials.login,
 			},
 		});
 
-		if (principal === null) {
-			throw new Error('Principal not found or not active.');
+		if (account === null) {
+			throw new Error('Account not found or not active.');
 		}
 
-		const principalId = principal[this.principalIdColumn];
+		const accountId = account[this.accountIdColumn];
 
 		// Generate token
 		const token = await this.jwt.generateToken(
 			{
 				type: 'magic-token',
-				principalId: principal[this.principalIdColumn],
+				accountId: account[this.accountIdColumn],
 			},
 			{
 				expiresIn: options.expiresIn,
@@ -61,7 +61,7 @@ export class MagicTokenAuthentication<
 
 		await this.magicTokenRepo.insertOne({
 			record: {
-				principal_id: principalId,
+				account_id: accountId,
 				token: token.token,
 				type: options.type,
 			},
@@ -73,7 +73,7 @@ export class MagicTokenAuthentication<
 	public async authenticate(credentials: {
 		token: string;
 		type: string;
-	}): Promise<TPrincipal | null> {
+	}): Promise<TAccount | null> {
 		// Verify magic token
 		const data = await this.jwt.decodeToken(credentials.token);
 
@@ -81,17 +81,17 @@ export class MagicTokenAuthentication<
 			throw new Error('Wrong type of token provided for this operation.');
 		}
 
-		// Check principal
-		const principal = await this.findActivePrincipal({
-			where: <TPrincipal>{
-				[this.principalIdColumn]: data.principalId,
+		// Check account
+		const account = await this.findActiveAccount({
+			where: <TAccount>{
+				[this.accountIdColumn]: data.accountId,
 			},
 		});
 
 		// Check token exists
 		const tokenRecord = await this.magicTokenRepo.findOne({
 			where: {
-				principal_id: data.principalId,
+				account_id: data.accountId,
 				token: credentials.token,
 				type: credentials.type,
 			},
@@ -106,7 +106,7 @@ export class MagicTokenAuthentication<
 			where: { id: tokenRecord.id },
 		});
 
-		return principal;
+		return account;
 	}
 
 	public override getMigrations(db: Database): Record<string, Migration> {
@@ -115,8 +115,8 @@ export class MagicTokenAuthentication<
 			'01-create-magic-token-table': new CreateMagicTokenTable(db, {
 				table: this.magicTokenTable,
 				tokenColumn: this.tokenColumn,
-				principalTable: this.principalTable,
-				principalIdColumn: this.principalIdColumn,
+				accountTable: this.accountTable,
+				accountIdColumn: this.accountIdColumn,
 			}),
 		};
 	}

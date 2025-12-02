@@ -6,20 +6,20 @@ import {
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
-export interface PrincipalTableOptions {
+export interface AccountTableOptions {
 	table: string;
-	principalIdColumn: string;
+	accountIdColumn: string;
 	loginColumn: string;
 }
 
-export class CreatePrincipalTableMigration extends Migration {
-	protected override options: PrincipalTableOptions = {
-		table: 'principals',
-		principalIdColumn: 'id',
+export class CreateAccountsTableMigration extends Migration {
+	protected override options: AccountTableOptions = {
+		table: 'accounts',
+		accountIdColumn: 'id',
 		loginColumn: 'login',
 	};
 
-	public constructor(db: Database, options: PrincipalTableOptions) {
+	public constructor(db: Database, options: AccountTableOptions) {
 		super(db, options);
 		this.options = options;
 	}
@@ -30,7 +30,7 @@ export class CreatePrincipalTableMigration extends Migration {
 			columns: [
 				{
 					...BigIntKeyColumn,
-					name: this.options.principalIdColumn,
+					name: this.options.accountIdColumn,
 				},
 				{
 					...UsernameColumn,

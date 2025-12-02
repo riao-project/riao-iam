@@ -11,7 +11,7 @@ const ORIGIN = `http://${HOST}:${PORT}`;
 // Setup database and FIDO2 authentication
 const db = createDatabase('fido2-example-v2');
 const userRepo = db.getQueryRepository<User>({
-	table: 'principals',
+	table: 'accounts',
 	identifiedBy: 'id',
 });
 

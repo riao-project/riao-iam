@@ -1,18 +1,18 @@
 import { AuthenticationBase } from '../../../src/authentication/authentication-base';
 import { createDatabase, runMigrations } from '../../database';
-import { Principal } from '../../principal';
+import { Account } from '../../account';
 
 describe('Authentication - Base', () => {
 	const db = createDatabase('authentication-base');
-	const repo = db.getQueryRepository<Principal>({
-		table: 'principals',
+	const repo = db.getQueryRepository<Account>({
+		table: 'accounts',
 		identifiedBy: 'id',
 	});
 
-	const auth = new (class extends AuthenticationBase<Principal> {
-		protected override principalRepo = repo;
+	const auth = new (class extends AuthenticationBase<Account> {
+		protected override accountRepo = repo;
 
-		public async authenticate(credentials: any): Promise<Principal | null> {
+		public async authenticate(credentials: any): Promise<Account | null> {
 			return null;
 		}
 	})({ repo });
@@ -26,29 +26,29 @@ describe('Authentication - Base', () => {
 		await db.disconnect();
 	});
 
-	it('should create a principal with a hashed password', async () => {
-		await auth.createPrincipal({
-			login: 'create_principal_test',
+	it('should create a account with a hashed password', async () => {
+		await auth.createAccount({
+			login: 'create_account_test',
 		});
 
-		const principal = await repo.findOne({ where: { id: '1' } });
+		const account = await repo.findOne({ where: { id: '1' } });
 
-		if (!principal) {
-			throw new Error('Principal not found');
+		if (!account) {
+			throw new Error('Account not found');
 		}
 
-		expect(principal.id).toEqual(1);
+		expect(account.id).toEqual(1);
 	});
 
-	it('can find active principal', async () => {
-		await auth.createPrincipal({
-			login: 'active_principal_test',
+	it('can find active account', async () => {
+		await auth.createAccount({
+			login: 'active_account_test',
 		});
 
-		const principal = await auth.findActivePrincipal({
-			where: { login: 'active_principal_test' },
+		const account = await auth.findActiveAccount({
+			where: { login: 'active_account_test' },
 		});
 
-		expect(principal?.login).toEqual('active_principal_test');
+		expect(account?.login).toEqual('active_account_test');
 	});
 });

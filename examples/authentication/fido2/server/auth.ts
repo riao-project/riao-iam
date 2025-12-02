@@ -7,7 +7,7 @@ import { QueryRepository } from '@riao/dbal';
  * Extended FIDO2 Authentication class with custom user support
  */
 export class Auth extends Fido2Authentication<User> {
-	protected override principalRepo: QueryRepository<User>;
+	protected override accountRepo: QueryRepository<User>;
 
 	constructor(options: {
 		repo: QueryRepository<User>;
@@ -17,16 +17,16 @@ export class Auth extends Fido2Authentication<User> {
 		origin: string;
 	}) {
 		super(options);
-		this.principalRepo = options.repo;
+		this.accountRepo = options.repo;
 	}
 
 	public override getMigrations(db: Database): Record<string, Migration> {
 		return {
 			...super.getMigrations(db),
-			'add-principal-display-name': new (class extends Migration {
+			'add-account-display-name': new (class extends Migration {
 				override async up(): Promise<void> {
 					await this.ddl.addColumns({
-						table: 'principals',
+						table: 'accounts',
 						columns: [
 							{
 								name: 'display_name',

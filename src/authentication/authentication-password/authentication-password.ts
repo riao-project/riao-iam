@@ -1,52 +1,52 @@
 import { Database, DatabaseRecordId, Migration } from '@riao/dbal';
 import { AuthenticationBase } from '../authentication-base';
 import { AddPasswordColumn } from './migrations/01-add-password-column';
-import { Principal } from '../../../test/principal';
+import { Account } from '../../../test/account';
 
 export abstract class PasswordAuthentication<
-	TPrincipal extends Principal,
-> extends AuthenticationBase<TPrincipal> {
+	TAccount extends Account,
+> extends AuthenticationBase<TAccount> {
 	protected passwordColumn = 'password';
 
-	public override async createPrincipal(
-		principal: TPrincipal
+	public override async createAccount(
+		account: TAccount
 	): Promise<DatabaseRecordId> {
 		const hash = await this.hash.make(
-			principal[this.passwordColumn] as string
+			account[this.passwordColumn] as string
 		);
 
-		return await super.createPrincipal({
-			...principal,
+		return await super.createAccount({
+			...account,
 			[this.passwordColumn]: hash,
 		});
 	}
 
 	public async authenticate(
-		credentials: Partial<TPrincipal>
-	): Promise<TPrincipal | null> {
-		const principal = await this.findActivePrincipal({
-			where: <TPrincipal>{
+		credentials: Partial<TAccount>
+	): Promise<TAccount | null> {
+		const account = await this.findActiveAccount({
+			where: <TAccount>{
 				[this.loginColumn]: credentials[this.loginColumn],
 			},
 		});
 
-		if (!principal) {
+		if (!account) {
 			return null;
 		}
 
 		const isValid = await this.hash.check(
 			credentials[this.passwordColumn] as string,
-			principal[this.passwordColumn] as string
+			account[this.passwordColumn] as string
 		);
 
-		return isValid ? principal : null;
+		return isValid ? account : null;
 	}
 
 	public override getMigrations(db: Database): Record<string, Migration> {
 		return {
 			...super.getMigrations(db),
 			'add-password-column': new AddPasswordColumn(db, {
-				table: this.principalTable,
+				table: this.accountTable,
 				passwordColumn: this.passwordColumn,
 			}),
 		};

@@ -9,25 +9,23 @@ import { Auth } from '../../auth/auth';
 import { Hash } from '../../hash';
 
 export abstract class AuthenticationBase<
-	TPrincipal extends DatabaseRecord,
-> extends Auth<TPrincipal> {
+	TAccount extends DatabaseRecord,
+> extends Auth<TAccount> {
 	protected hash: Hash = new Hash();
 
-	public async createPrincipal(
-		principal: TPrincipal
-	): Promise<DatabaseRecordId> {
-		const inserted = await this.principalRepo.insertOne({
-			record: principal,
+	public async createAccount(account: TAccount): Promise<DatabaseRecordId> {
+		const inserted = await this.accountRepo.insertOne({
+			record: account,
 		});
 
-		return inserted[this.principalIdColumn] as DatabaseRecordId;
+		return inserted[this.accountIdColumn] as DatabaseRecordId;
 	}
 
-	public abstract authenticate(credentials: any): Promise<TPrincipal | null>;
+	public abstract authenticate(credentials: any): Promise<TAccount | null>;
 
-	public async findActivePrincipal(
-		query: SelectQuery<TPrincipal>
-	): Promise<TPrincipal | null> {
+	public async findActiveAccount(
+		query: SelectQuery<TAccount>
+	): Promise<TAccount | null> {
 		const isActiveQuery = this.isActiveQuery();
 
 		if (query.where && isActiveQuery !== undefined) {
@@ -37,14 +35,14 @@ export abstract class AuthenticationBase<
 			query.where = isActiveQuery;
 		}
 
-		const principal = await this.principalRepo.findOne({
+		const account = await this.accountRepo.findOne({
 			...query,
 		});
 
-		return principal;
+		return account;
 	}
 
-	protected isActiveQuery(): undefined | Expression<TPrincipal> {
+	protected isActiveQuery(): undefined | Expression<TAccount> {
 		return undefined;
 	}
 }

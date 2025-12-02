@@ -9,7 +9,7 @@ interface AddPasswordColumnOptions {
 
 export class AddPasswordColumn extends Migration {
 	protected override options: AddPasswordColumnOptions = {
-		table: 'principals',
+		table: 'accounts',
 		passwordColumn: 'password',
 	};
 

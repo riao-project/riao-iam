@@ -8,26 +8,26 @@ import { Migration } from '@riao/dbal';
 export interface Fido2CredentialsTableOptions {
 	table: string;
 	credentialIdColumn: string;
-	principalIdColumn: string;
+	accountIdColumn: string;
 	publicKeyColumn: string;
 	counterColumn: string;
 	transportsColumn: string;
 	deviceNameColumn: string;
-	principalTable: string;
-	principalTableIdColumn: string;
+	accountTable: string;
+	accountTableIdColumn: string;
 }
 
 export class CreateFido2CredentialsTableMigration extends Migration {
 	protected override options: Fido2CredentialsTableOptions = {
 		table: 'fido2_credentials',
 		credentialIdColumn: 'credential_id',
-		principalIdColumn: 'principal_id',
+		accountIdColumn: 'account_id',
 		publicKeyColumn: 'public_key',
 		counterColumn: 'counter',
 		transportsColumn: 'transports',
 		deviceNameColumn: 'device_name',
-		principalTable: 'principals',
-		principalTableIdColumn: 'id',
+		accountTable: 'accounts',
+		accountTableIdColumn: 'id',
 	};
 
 	public constructor(
@@ -49,14 +49,14 @@ export class CreateFido2CredentialsTableMigration extends Migration {
 					length: 1024,
 					primaryKey: true,
 				},
-				// Reference to the principal who owns this credential
+				// Reference to the account who owns this credential
 				{
-					name: this.options.principalIdColumn,
+					name: this.options.accountIdColumn,
 					type: ColumnType.BIGINT,
 					required: true,
 					fk: {
-						referencesTable: this.options.principalTable,
-						referencesColumn: this.options.principalTableIdColumn,
+						referencesTable: this.options.accountTable,
+						referencesColumn: this.options.accountTableIdColumn,
 						onDelete: 'CASCADE',
 					},
 				},

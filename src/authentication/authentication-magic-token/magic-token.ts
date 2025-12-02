@@ -11,12 +11,12 @@ export const defaultTokenOptions: TokenOptions = {
 
 export interface MagicTokenPayload {
 	type: 'magic-token';
-	principalId: DatabaseRecordId;
+	accountId: DatabaseRecordId;
 }
 
 export interface MagicTokenRecord {
 	id: DatabaseRecordId;
-	principal_id: DatabaseRecordId;
+	account_id: DatabaseRecordId;
 	created_at: Date;
 	type: string;
 	token: string;
