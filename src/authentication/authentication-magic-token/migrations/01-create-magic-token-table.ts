@@ -15,9 +15,9 @@ interface CreateMagicTokenTableOptions {
 
 export class CreateMagicTokenTable extends Migration {
 	protected override options: CreateMagicTokenTableOptions = {
-		table: 'magic_tokens',
+		table: 'iam_magic_tokens',
 		tokenColumn: 'token',
-		accountTable: 'accounts',
+		accountTable: 'iam_accounts',
 		accountIdColumn: 'id',
 	};
 

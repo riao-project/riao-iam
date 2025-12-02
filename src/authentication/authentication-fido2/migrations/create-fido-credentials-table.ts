@@ -19,14 +19,14 @@ export interface Fido2CredentialsTableOptions {
 
 export class CreateFido2CredentialsTableMigration extends Migration {
 	protected override options: Fido2CredentialsTableOptions = {
-		table: 'fido2_credentials',
+		table: 'iam_fido2_credentials',
 		credentialIdColumn: 'credential_id',
 		accountIdColumn: 'account_id',
 		publicKeyColumn: 'public_key',
 		counterColumn: 'counter',
 		transportsColumn: 'transports',
 		deviceNameColumn: 'device_name',
-		accountTable: 'accounts',
+		accountTable: 'iam_accounts',
 		accountTableIdColumn: 'id',
 	};
 

@@ -6,7 +6,7 @@ import { createDatabase, runMigrations } from '../../database';
 describe('AuthBase', () => {
 	const db = createDatabase('auth-base');
 	const repo = db.getQueryRepository<Account>({
-		table: 'accounts',
+		table: 'iam_accounts',
 		identifiedBy: 'id',
 	});
 
@@ -21,7 +21,7 @@ describe('AuthBase', () => {
 
 	it('should create account table', async () => {
 		const tables = (await db.getSchema()).tables;
-		const hasTable = Object.keys(tables).includes('accounts');
+		const hasTable = Object.keys(tables).includes('iam_accounts');
 		expect(hasTable).toBe(true);
 	});
 });

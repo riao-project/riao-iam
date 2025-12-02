@@ -15,13 +15,13 @@ export interface Fido2ChallengesTableOptions {
 
 export class CreateFido2ChallengesTableMigration extends Migration {
 	protected override options: Fido2ChallengesTableOptions = {
-		table: 'fido2_challenges',
+		table: 'iam_fido2_challenges',
 		challengeIdColumn: 'challenge_id',
 		accountIdColumn: 'account_id',
 		challengeTypeColumn: 'challenge_type',
 		expiresAtColumn: 'expires_at',
 		usedColumn: 'used',
-		accountTable: 'accounts',
+		accountTable: 'iam_accounts',
 		accountTableIdColumn: 'id',
 	};
 

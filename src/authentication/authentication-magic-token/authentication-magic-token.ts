@@ -20,7 +20,7 @@ export class MagicTokenAuthentication<
 	TAccount extends Account = Account,
 > extends AuthenticationBase<TAccount> {
 	protected jwt: Jwt<MagicTokenPayload>;
-	protected magicTokenTable = 'magic_tokens';
+	protected magicTokenTable = 'iam_magic_tokens';
 	protected tokenColumn = 'token';
 	protected magicTokenRepo: QueryRepository<MagicTokenRecord>;
 

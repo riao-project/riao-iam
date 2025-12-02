@@ -26,7 +26,7 @@ export class Auth extends Fido2Authentication<User> {
 			'add-account-display-name': new (class extends Migration {
 				override async up(): Promise<void> {
 					await this.ddl.addColumns({
-						table: 'accounts',
+						table: 'iam_accounts',
 						columns: [
 							{
 								name: 'display_name',

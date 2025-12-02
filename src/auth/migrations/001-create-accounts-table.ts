@@ -14,7 +14,7 @@ export interface AccountTableOptions {
 
 export class CreateAccountsTableMigration extends Migration {
 	protected override options: AccountTableOptions = {
-		table: 'accounts',
+		table: 'iam_accounts',
 		accountIdColumn: 'id',
 		loginColumn: 'login',
 	};

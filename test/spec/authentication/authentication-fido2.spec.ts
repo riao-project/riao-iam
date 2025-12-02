@@ -5,7 +5,7 @@ import { Account } from '../../account';
 describe('Authentication - FIDO2', () => {
 	const db = createDatabase('authentication-fido2');
 	const repo = db.getQueryRepository<Account>({
-		table: 'accounts',
+		table: 'iam_accounts',
 		identifiedBy: 'id',
 	});
 

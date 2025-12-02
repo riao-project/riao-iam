@@ -10,7 +10,7 @@ interface PasswordAccount extends Account {
 describe('Authentication - Password', () => {
 	const db = createDatabase('authentication-password');
 	const repo = db.getQueryRepository<PasswordAccount>({
-		table: 'accounts',
+		table: 'iam_accounts',
 		identifiedBy: 'id',
 	});
 

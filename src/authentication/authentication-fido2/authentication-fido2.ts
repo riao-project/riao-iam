@@ -63,8 +63,8 @@ export class Fido2Authentication<
 	protected readonly rpID: string;
 	protected readonly origin: string;
 
-	protected challengeTable = 'fido2_challenges';
-	protected credentialTable = 'fido2_credentials';
+	protected challengeTable = 'iam_fido2_challenges';
+	protected credentialTable = 'iam_fido2_credentials';
 
 	protected challengeRepo: QueryRepository<StoredChallenge>;
 	protected credentialRepo: QueryRepository<AuthenticatorCredential>;

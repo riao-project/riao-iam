@@ -11,11 +11,11 @@ import { MagicTokenRecord } from '../../../src/authentication/authentication-mag
 describe('Authentication - Magic Token', () => {
 	const db = createDatabase('authentication-magic-token');
 	const repo = db.getQueryRepository<Account>({
-		table: 'accounts',
+		table: 'iam_accounts',
 		identifiedBy: 'id',
 	});
 	const tokenRepo = db.getQueryRepository<MagicTokenRecord>({
-		table: 'magic_tokens',
+		table: 'iam_magic_tokens',
 		identifiedBy: 'id',
 	}) as QueryRepository<MagicTokenRecord>;
 

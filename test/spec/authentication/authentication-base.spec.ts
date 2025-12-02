@@ -5,7 +5,7 @@ import { Account } from '../../account';
 describe('Authentication - Base', () => {
 	const db = createDatabase('authentication-base');
 	const repo = db.getQueryRepository<Account>({
-		table: 'accounts',
+		table: 'iam_accounts',
 		identifiedBy: 'id',
 	});
 

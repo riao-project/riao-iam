@@ -12,7 +12,7 @@ export interface AuthOptions<TAccount extends DatabaseRecord> {
 
 export abstract class Auth<TAccount extends DatabaseRecord> {
 	protected accountRepo: QueryRepository<TAccount>;
-	protected accountTable = 'accounts';
+	protected accountTable = 'iam_accounts';
 	protected accountIdColumn = 'id';
 	protected loginColumn = 'login';
 
