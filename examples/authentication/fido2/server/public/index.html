@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+	<head>
+		<title>FIDO2 Example</title>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1"
+		/>
+		<link
+			rel="stylesheet"
+			href="style.css"
+		/>
+	</head>
+	<body>
+		<div class="container">
+			<h1>🔐 FIDO2 WebAuthn Demo</h1>
+
+			<div class="form-group">
+				<label for="login">Username:</label>
+				<input
+					type="text"
+					id="login"
+					placeholder="Enter username"
+					value="demo@example.com"
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="displayName">Display Name (optional):</label>
+				<input
+					type="text"
+					id="displayName"
+					placeholder="Enter display name"
+					value="Demo User"
+				/>
+			</div>
+
+			<button onclick="register()">🔑 Register Authenticator</button>
+			<button onclick="authenticate()">🔓 Authenticate</button>
+
+			<div id="status"></div>
+
+			<div class="instructions">
+				<h3>Instructions:</h3>
+				<ol>
+					<li>Enter a login and click "Register Authenticator"</li>
+					<li>
+						Follow your browser's prompts to create a credential
+						(fingerprint, Face ID, etc.)
+					</li>
+					<li>Once registered, click "Authenticate" to sign in</li>
+				</ol>
+				<p>
+					<strong>Note:</strong> This requires HTTPS in production.
+					For localhost development, HTTP is allowed.
+				</p>
+			</div>
+		</div>
+
+		<script src="script.js"></script>
+	</body>
+</html>

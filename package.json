@@ -22,9 +22,10 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"@riao/dbal": "file:../riao-dbal/dist/src",
+		"@riao/dbal": "^3.7.1",
 		"@riao/mysql": "^3.4.0",
-		"@riao/sqlite": "file:../riao-driver-sqlite/dist/src",
+		"@riao/sqlite": "^3.4.0",
+		"@simplewebauthn/server": "^13.2.2",
 		"bcrypt": "^6.0.0",
 		"jsonwebtoken": "^9.0.2",
 		"ms": "^2.1.3"
@@ -32,13 +33,16 @@
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
 		"@riao/cli": "file:../riao-cli/src",
+		"@simplewebauthn/types": "^12.0.0",
 		"@types/bcrypt": "^6.0.0",
+		"@types/express": "^5.0.3",
 		"@types/jasmine": "^5.1.4",
 		"@types/jsonwebtoken": "^9.0.10",
 		"@types/ms": "^2.1.0",
 		"@types/node": "^18.19.39",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
 		"eslint": "^8.57.0",
+		"express": "^5.1.0",
 		"jasmine": "^5.1.0",
 		"nyc": "^17.0.0",
 		"prettier": "^3.3.2",
