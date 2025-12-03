@@ -64,5 +64,23 @@
 		"url": "https://github.com/riao-project/riao-iam/issues"
 	},
 	"homepage": "https://github.com/riao-project/riao-iam#readme",
-	"keywords": []
+	"keywords": [
+		"iam",
+		"authentication",
+		"authorization",
+		"riao",
+		"riao-project",
+		"typescript",
+		"password",
+		"magic-link",
+		"webauthn",
+		"oauth2",
+		"fido2",
+		"jwt",
+		"openid-connect",
+		"acl",
+		"rbac",
+		"abac",
+		"rebac"
+	]
 }
