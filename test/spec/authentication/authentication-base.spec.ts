@@ -27,18 +27,17 @@ describe('Authentication - Base', () => {
 		await db.disconnect();
 	});
 
-	it('should create a account with a hashed password', async () => {
-		await auth.createAccount({
+	it('should create an account', async () => {
+		const id = await auth.createAccount({
 			login: 'create_account_test',
 		});
 
-		const account = await repo.findOne({ where: { id: '1' } });
-
+		const account = await repo.findOne({ where: { id } });
 		if (!account) {
 			throw new Error('Account not found');
 		}
 
-		expect(account.id).toEqual(1);
+		expect(account.id).toEqual(id);
 	});
 
 	it('can find active account', async () => {

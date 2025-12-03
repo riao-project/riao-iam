@@ -37,7 +37,7 @@ export class CreateFido2CredentialsTableMigration extends Migration {
 				// Signature counter for replay attack prevention
 				{
 					name: 'counter',
-					type: ColumnType.UUID,
+					type: ColumnType.BIGINT,
 					required: true,
 				},
 				// JSON array of supported authenticator transports

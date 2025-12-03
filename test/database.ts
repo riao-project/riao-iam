@@ -1,21 +1,41 @@
-import { Database, Migration, MigrationRunner } from '@riao/dbal';
-import TestDatabase from '../database/test';
-import { Auth } from '../src/auth';
-import { readdirSync, unlinkSync } from 'fs';
+import {
+	Database,
+	DatabaseConnectionOptions,
+	Migration,
+	MigrationRunner,
+} from '@riao/dbal';
 import { AuthMigrations } from '../src/auth/auth-migrations';
+import { maindb } from '../database/main';
+import { DatabasePostgres18 } from '@riao/postgres';
 
 export function createDatabase(name: string): Database {
-	return new (class extends TestDatabase {
+	return new (class extends DatabasePostgres18 {
 		override name = name;
+
+		override async init(options?: {
+			connectionOptions?: DatabaseConnectionOptions;
+			useSchemaCache?: boolean;
+		}): Promise<void> {
+			console.log('Setting up test database:', name);
+			await maindb.ddl.dropDatabase({
+				ifExists: true,
+				name: `"${name}"`,
+			});
+			await maindb.ddl.createDatabase({
+				name: `"${name}"`,
+			});
+
+			await super.init(options);
+		}
 
 		public override configureFromEnv(): void {
 			this.env = {
 				NODE_ENV: 'test',
-				host: '',
-				port: 0,
-				username: '',
-				password: '',
-				database: `test/databases/${this.name}.db`,
+				host: maindb.env.host,
+				port: maindb.env.port,
+				username: maindb.env.username,
+				password: maindb.env.password,
+				database: name,
 			};
 		}
 	})();
@@ -37,16 +57,4 @@ export async function runMigrations(
 	return runner.run(migrations);
 }
 
-export async function clearDatabases(): Promise<void> {
-	readdirSync('test/databases').forEach((file) => {
-		if (file.endsWith('.db')) {
-			const dbPath = `test/databases/${file}`;
-			try {
-				unlinkSync(dbPath);
-			}
-			catch (err) {
-				console.error(`Failed to delete database file ${dbPath}:`, err);
-			}
-		}
-	});
-}
+export async function clearDatabases(): Promise<void> {}

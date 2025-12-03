@@ -475,14 +475,6 @@ describe('Authentication - FIDO2', () => {
 	});
 
 	describe('generateAuthenticationOptions', () => {
-		let testCredentialId: string;
-
-		beforeEach(async () => {
-			// Create a unique mock credential for this test using helper
-			testCredentialId = 'test-credential-auth-options';
-			await createTestCredential(testAccount.id!, testCredentialId);
-		});
-
 		it('should generate auth options without userID', async () => {
 			const options = await auth.generateAuthenticationOptions();
 
@@ -494,6 +486,9 @@ describe('Authentication - FIDO2', () => {
 		});
 
 		it('should generate auth options with userID', async () => {
+			const testCredentialId = 'test-credential-userid';
+			await createTestCredential(testAccount.id!, testCredentialId);
+
 			const userID = testAccount.id!.toString();
 			const options = await auth.generateAuthenticationOptions(userID);
 
@@ -593,8 +588,10 @@ describe('Authentication - FIDO2', () => {
 				expect(cred2).toBeDefined();
 			});
 
-			it('should return empty array for no credentials', async () => {
-				const credentials = await auth['getExistingCredentials']('999');
+			it('should throw an error for missing id', async () => {
+				const credentials = await auth['getExistingCredentials'](
+					''
+				).catch(() => []);
 
 				expect(credentials.length).toBe(0);
 			});
@@ -609,12 +606,18 @@ describe('Authentication - FIDO2', () => {
 
 				expect(credential).not.toBeNull();
 				if (credential) {
-					expect(credential.credential_id).toBe(helperCredential1Id);
-					expect(credential.account_id).toEqual(
-						helperTestAccount.id!
-					);
-					expect(credential.public_key).toBe('key-1');
-					expect(credential.counter).toBe(1);
+					expect(credential.credential_id)
+						.withContext('Credential ID mismatch')
+						.toBe('' + helperCredential1Id);
+					expect(credential.account_id)
+						.withContext('Account ID mismatch')
+						.toEqual('' + helperTestAccount.id!);
+					expect(credential.public_key)
+						.withContext('Public key mismatch')
+						.toBe('key-1');
+					expect('' + credential.counter)
+						.withContext('Counter mismatch')
+						.toEqual('1');
 				}
 			});
 

@@ -23,8 +23,7 @@
 	},
 	"dependencies": {
 		"@riao/dbal": "^3.7.1",
-		"@riao/mysql": "^3.4.0",
-		"@riao/sqlite": "^3.4.0",
+		"@riao/postgres": "^3.5.0",
 		"@simplewebauthn/server": "^13.2.2",
 		"bcrypt": "^6.0.0",
 		"jsonwebtoken": "^9.0.2",
@@ -32,7 +31,7 @@
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
-		"@riao/cli": "file:../riao-cli/src",
+		"@riao/cli": "^3.0.1",
 		"@simplewebauthn/types": "^12.0.0",
 		"@types/bcrypt": "^6.0.0",
 		"@types/express": "^5.0.3",

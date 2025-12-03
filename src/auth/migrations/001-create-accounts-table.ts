@@ -1,7 +1,7 @@
 import {
-	BigIntKeyColumn,
 	CreateTimestampColumn,
 	UsernameColumn,
+	UUIDKeyColumn,
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
@@ -10,7 +10,7 @@ export class CreateAccountsTableMigration extends Migration {
 		await this.ddl.createTable({
 			name: 'iam_accounts',
 			columns: [
-				BigIntKeyColumn,
+				UUIDKeyColumn,
 				{
 					...UsernameColumn,
 					name: 'login',

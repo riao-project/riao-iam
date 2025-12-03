@@ -1,8 +1,8 @@
 import { ColumnType } from '@riao/dbal';
 import {
-	BigIntKeyColumn,
 	CreateTimestampColumn,
 	PasswordColumn,
+	UUIDKeyColumn,
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
@@ -11,7 +11,7 @@ export class CreateMagicTokenTable extends Migration {
 		await this.ddl.createTable({
 			name: 'iam_magic_tokens',
 			columns: [
-				BigIntKeyColumn,
+				UUIDKeyColumn,
 				CreateTimestampColumn,
 				{
 					name: 'type',
@@ -21,8 +21,7 @@ export class CreateMagicTokenTable extends Migration {
 				},
 				{
 					name: 'account_id',
-					type: ColumnType.VARCHAR,
-					length: 255,
+					type: ColumnType.UUID,
 					required: true,
 					fk: {
 						referencesTable: 'iam_accounts',
@@ -31,8 +30,10 @@ export class CreateMagicTokenTable extends Migration {
 					},
 				},
 				{
-					...PasswordColumn,
 					name: 'token',
+					type: ColumnType.VARCHAR,
+					length: 1024,
+					required: true,
 				},
 			],
 		});

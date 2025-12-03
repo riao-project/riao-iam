@@ -29,18 +29,18 @@ describe('Authentication - Password', () => {
 	});
 
 	it('should create a account with a hashed password', async () => {
-		await auth.createAccount({
+		const id = await auth.createAccount({
 			login: 'create_account_test',
 			password: 'password123',
 		});
 
-		const account = await repo.findOne({ where: { id: '1' } });
+		const account = await repo.findOne({ where: { id } });
 
 		if (!account) {
 			throw new Error('Account not found');
 		}
 
-		expect(account.id).toEqual(1);
+		expect(account.id).toEqual(id);
 		expect(await compare('password123', account.password)).toEqual(true);
 	});
 
@@ -59,7 +59,7 @@ describe('Authentication - Password', () => {
 			throw new Error('Authentication failed');
 		}
 
-		expect(authenticated.id).toBeGreaterThanOrEqual(1);
+		expect((authenticated.id as string).length).toBeGreaterThanOrEqual(1);
 		expect(authenticated.login).toEqual('correct_test');
 	});
 
