@@ -16,7 +16,6 @@ export function createDatabase(name: string): Database {
 			connectionOptions?: DatabaseConnectionOptions;
 			useSchemaCache?: boolean;
 		}): Promise<void> {
-			console.log('Setting up test database:', name);
 			await maindb.ddl.dropDatabase({
 				ifExists: true,
 				name: `"${name}"`,
