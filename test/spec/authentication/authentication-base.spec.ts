@@ -1,0 +1,54 @@
+import { AuthenticationBase } from '../../../src/authentication/authentication-base';
+import { createDatabase, runMigrations } from '../../database';
+import { Account } from '../../account';
+import { AuthMigrations } from '../../../src/auth/auth-migrations';
+
+describe('Authentication - Base', () => {
+	const db = createDatabase('authentication-base');
+	const repo = db.getQueryRepository<Account>({
+		table: 'iam_accounts',
+		identifiedBy: 'id',
+	});
+
+	const auth = new (class extends AuthenticationBase<Account> {
+		protected override accountRepo = repo;
+
+		public async authenticate(credentials: any): Promise<Account | null> {
+			return null;
+		}
+	})({ repo });
+
+	beforeAll(async () => {
+		await db.init();
+		await runMigrations(db, new AuthMigrations());
+	});
+
+	afterAll(async () => {
+		await db.disconnect();
+	});
+
+	it('should create an account', async () => {
+		const id = await auth.createAccount({
+			login: 'create_account_test',
+		});
+
+		const account = await repo.findOne({ where: { id } });
+		if (!account) {
+			throw new Error('Account not found');
+		}
+
+		expect(account.id).toEqual(id);
+	});
+
+	it('can find active account', async () => {
+		await auth.createAccount({
+			login: 'active_account_test',
+		});
+
+		const account = await auth.findActiveAccount({
+			where: { login: 'active_account_test' },
+		});
+
+		expect(account?.login).toEqual('active_account_test');
+	});
+});

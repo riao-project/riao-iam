@@ -1,8 +1,16 @@
 import 'jasmine';
-import * as index from '../../src';
+import { clearDatabases } from '../database';
+import { maindb } from '../../database/main';
 
-describe('riao-iam', () => {
-	it('exports a', () => {
-		expect(index.a).toBeTrue();
-	});
+beforeAll(async () => {
+	console.log('Initializing main test database...');
+	await maindb.init();
+	console.log('Main test database initialized.');
+	//await clearDatabases();
+	//await testdb.init();
+});
+
+afterAll(async () => {
+	await maindb.disconnect();
+	//await testdb.disconnect();
 });

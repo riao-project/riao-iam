@@ -7,3 +7,5 @@ doc*/
 node_modules/
 
 *.md
+
+examples/authentication/fido2/server/public/*

@@ -24,6 +24,7 @@
 	},
 	"exclude": ["./dist/"],
 	"include": [
+		"./database/",
 		"./examples/",
 		"./scripts",
 		"./src/",
