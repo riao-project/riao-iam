@@ -12,7 +12,7 @@ export class CreateFido2ChallengesTableMigration extends Migration {
 			columns: [
 				// The unique challenge string from WebAuthn (primary key)
 				{
-					name: 'challenge_id',
+					name: 'id',
 					type: ColumnType.VARCHAR,
 					length: 512,
 					primaryKey: true,
@@ -43,7 +43,7 @@ export class CreateFido2ChallengesTableMigration extends Migration {
 				},
 				// When the challenge expires (typically 5 minutes)
 				{
-					name: 'expires_at',
+					name: 'expires',
 					type: ColumnType.TIMESTAMP,
 					required: true,
 				},

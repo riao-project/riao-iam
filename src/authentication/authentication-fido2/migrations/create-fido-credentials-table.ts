@@ -12,7 +12,7 @@ export class CreateFido2CredentialsTableMigration extends Migration {
 			columns: [
 				// Base64URL encoded credential ID from WebAuthn (primary key)
 				{
-					name: 'credential_id',
+					name: 'id',
 					type: ColumnType.VARCHAR,
 					length: 1024,
 					primaryKey: true,

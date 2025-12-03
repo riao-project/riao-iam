@@ -20,16 +20,16 @@ import {
 import { AuthOptions } from '../../auth/auth';
 
 export interface StoredChallenge {
-	challenge_id: string;
+	id: string;
 	account_id: DatabaseRecordId;
 	challenge_type: 'registration' | 'authentication';
-	expires_at: Date;
+	expires: Date;
 	used: boolean;
 	created_at?: Date;
 }
 
 export interface AuthenticatorCredential {
-	credential_id: string;
+	id: string;
 	account_id: DatabaseRecordId;
 	public_key: string;
 	counter: number;
@@ -115,10 +115,10 @@ export class Fido2Authentication<
 		await this.challengeRepo.insert({
 			records: [
 				{
-					challenge_id: registrationOptions.challenge,
+					id: registrationOptions.challenge,
 					account_id: account[this.accountIdColumn],
 					challenge_type: 'registration',
-					expires_at: expiresAt,
+					expires: expiresAt,
 					used: false,
 				},
 			],
@@ -152,7 +152,7 @@ export class Fido2Authentication<
 		const storedChallenge = challengesRaw[0];
 		const opts: VerifyRegistrationResponseOpts = {
 			response,
-			expectedChallenge: storedChallenge.challenge_id,
+			expectedChallenge: storedChallenge.id,
 			expectedOrigin: this.origin,
 			expectedRPID: this.rpID,
 		};
@@ -178,7 +178,7 @@ export class Fido2Authentication<
 					records: [
 						{
 							// Use the original credential ID from the response
-							credential_id: response.id,
+							id: response.id,
 							account_id: account[this.accountIdColumn],
 							public_key: Buffer.from(
 								credential.publicKey
@@ -192,7 +192,7 @@ export class Fido2Authentication<
 				// Mark challenge as used
 				await this.challengeRepo.update({
 					set: { used: true },
-					where: { challenge_id: storedChallenge.challenge_id },
+					where: { id: storedChallenge.id },
 				});
 
 				return {
@@ -231,10 +231,10 @@ export class Fido2Authentication<
 			await this.challengeRepo.insert({
 				records: [
 					{
-						challenge_id: authenticationOptions.challenge,
+						id: authenticationOptions.challenge,
 						account_id: userID,
 						challenge_type: 'authentication',
-						expires_at: expiresAt,
+						expires: expiresAt,
 						used: false,
 					},
 				],
@@ -295,11 +295,11 @@ export class Fido2Authentication<
 
 		const opts: VerifyAuthenticationResponseOpts = {
 			response,
-			expectedChallenge: storedChallenge.challenge_id,
+			expectedChallenge: storedChallenge.id,
 			expectedOrigin: this.origin,
 			expectedRPID: this.rpID,
 			credential: {
-				id: authenticator.credential_id,
+				id: authenticator.id,
 				publicKey: Buffer.from(authenticator.public_key, 'base64'),
 				counter: authenticator.counter,
 				transports: [],
@@ -317,13 +317,13 @@ export class Fido2Authentication<
 			set: {
 				counter: verification.authenticationInfo.newCounter,
 			},
-			where: { credential_id: authenticator.credential_id },
+			where: { id: authenticator.id },
 		});
 
 		// Mark challenge as used
 		await this.challengeRepo.update({
 			set: { used: true },
-			where: { challenge_id: storedChallenge.challenge_id },
+			where: { id: storedChallenge.id },
 		});
 
 		// Retrieve and return the account
@@ -365,7 +365,7 @@ export class Fido2Authentication<
 			}
 
 			return {
-				id: cred.credential_id,
+				id: cred.id,
 				type: 'public-key' as const,
 				transports,
 			};
@@ -376,7 +376,7 @@ export class Fido2Authentication<
 		credentialID: string
 	): Promise<AuthenticatorCredential | null> {
 		return await this.credentialRepo.findOne({
-			where: { credential_id: credentialID },
+			where: { id: credentialID },
 		});
 	}
 }

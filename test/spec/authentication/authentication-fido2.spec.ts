@@ -95,7 +95,7 @@ describe('Authentication - FIDO2', () => {
 		await auth['credentialRepo'].insert({
 			records: [
 				{
-					credential_id: credId,
+					id: credId,
 					account_id: accountId,
 					public_key: publicKey,
 					counter,
@@ -278,7 +278,7 @@ describe('Authentication - FIDO2', () => {
 				// Manually expire the challenge
 				const pastDate = new Date(Date.now() - 1000 * 60 * 60);
 				await auth['challengeRepo'].update({
-					set: { expires_at: pastDate },
+					set: { expires: pastDate },
 					where: {
 						account_id: testAccount.id,
 						challenge_type: 'registration',
@@ -417,7 +417,7 @@ describe('Authentication - FIDO2', () => {
 
 			// Corrupt the challenge by updating it
 			await auth['challengeRepo'].update({
-				set: { challenge_id: 'invalid-challenge' },
+				set: { id: 'invalid-challenge' },
 				where: {
 					account_id: testAccount.id,
 					challenge_type: 'registration',
@@ -606,7 +606,7 @@ describe('Authentication - FIDO2', () => {
 
 				expect(credential).not.toBeNull();
 				if (credential) {
-					expect(credential.credential_id)
+					expect(credential.id)
 						.withContext('Credential ID mismatch')
 						.toBe('' + helperCredential1Id);
 					expect(credential.account_id)
@@ -643,7 +643,7 @@ describe('Authentication - FIDO2', () => {
 					await auth['getAuthenticatorByCredentialID'](testCredId);
 
 				expect(storedCredential).not.toBeNull();
-				expect(storedCredential!.credential_id).toBe(testCredId);
+				expect(storedCredential!.id).toBe(testCredId);
 			});
 		});
 	});
