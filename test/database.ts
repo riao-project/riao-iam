@@ -1,7 +1,8 @@
-import { Database, MigrationRunner } from '@riao/dbal';
+import { Database, Migration, MigrationRunner } from '@riao/dbal';
 import TestDatabase from '../database/test';
 import { Auth } from '../src/auth';
 import { readdirSync, unlinkSync } from 'fs';
+import { AuthMigrations } from '../src/auth/auth-migrations';
 
 export function createDatabase(name: string): Database {
 	return new (class extends TestDatabase {
@@ -20,10 +21,20 @@ export function createDatabase(name: string): Database {
 	})();
 }
 
-export async function runMigrations(db: Database, auth: Auth<any>) {
+export async function runMigrations(
+	db: Database,
+	authMigrations: AuthMigrations
+) {
 	const runner = new MigrationRunner(db);
-	const migrations = await auth.getMigrations(db);
-	return runner.run(migrations, (...args) => {});
+	const migrations = Object.entries(authMigrations.getMigrations()).reduce(
+		(acc, [key, MigrationClass]) => {
+			acc[key] = new MigrationClass(db);
+			return acc;
+		},
+		{} as Record<string, Migration>
+	);
+
+	return runner.run(migrations);
 }
 
 export async function clearDatabases(): Promise<void> {

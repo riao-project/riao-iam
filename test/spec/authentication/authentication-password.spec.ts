@@ -2,6 +2,7 @@ import { PasswordAuthentication } from '../../../src/authentication/authenticati
 import { createDatabase, runMigrations } from '../../database';
 import { Account } from '../../account';
 import { compare } from 'bcrypt';
+import { AuthenticationPasswordMigrations } from '../../../src/authentication/authentication-password/authentication-password-migrations';
 
 interface PasswordAccount extends Account {
 	password: string;
@@ -20,7 +21,7 @@ describe('Authentication - Password', () => {
 
 	beforeAll(async () => {
 		await db.init();
-		await runMigrations(db, auth);
+		await runMigrations(db, new AuthenticationPasswordMigrations());
 	});
 
 	afterAll(async () => {

@@ -1,6 +1,5 @@
-import { Database, DatabaseRecordId, Migration } from '@riao/dbal';
+import { DatabaseRecordId } from '@riao/dbal';
 import { AuthenticationBase } from '../authentication-base';
-import { AddPasswordColumn } from './migrations/001-add-password-column';
 import { Account } from '../../../test/account';
 
 export abstract class PasswordAuthentication<
@@ -40,15 +39,5 @@ export abstract class PasswordAuthentication<
 		);
 
 		return isValid ? account : null;
-	}
-
-	public override getMigrations(db: Database): Record<string, Migration> {
-		return {
-			...super.getMigrations(db),
-			'add-password-column': new AddPasswordColumn(db, {
-				table: this.accountTable,
-				passwordColumn: this.passwordColumn,
-			}),
-		};
 	}
 }

@@ -1,6 +1,7 @@
 import { AuthenticationBase } from '../../../src/authentication/authentication-base';
 import { createDatabase, runMigrations } from '../../database';
 import { Account } from '../../account';
+import { AuthMigrations } from '../../../src/auth/auth-migrations';
 
 describe('Authentication - Base', () => {
 	const db = createDatabase('authentication-base');
@@ -19,7 +20,7 @@ describe('Authentication - Base', () => {
 
 	beforeAll(async () => {
 		await db.init();
-		await runMigrations(db, auth);
+		await runMigrations(db, new AuthMigrations());
 	});
 
 	afterAll(async () => {

@@ -1,100 +1,68 @@
-import { ColumnType, Database } from '@riao/dbal';
+import { ColumnType } from '@riao/dbal';
 import {
 	CreateTimestampColumn,
 	UpdateTimestampColumn,
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
-export interface Fido2CredentialsTableOptions {
-	table: string;
-	credentialIdColumn: string;
-	accountIdColumn: string;
-	publicKeyColumn: string;
-	counterColumn: string;
-	transportsColumn: string;
-	deviceNameColumn: string;
-	accountTable: string;
-	accountTableIdColumn: string;
-}
-
 export class CreateFido2CredentialsTableMigration extends Migration {
-	protected override options: Fido2CredentialsTableOptions = {
-		table: 'iam_fido2_credentials',
-		credentialIdColumn: 'credential_id',
-		accountIdColumn: 'account_id',
-		publicKeyColumn: 'public_key',
-		counterColumn: 'counter',
-		transportsColumn: 'transports',
-		deviceNameColumn: 'device_name',
-		accountTable: 'iam_accounts',
-		accountTableIdColumn: 'id',
-	};
-
-	public constructor(
-		db: Database,
-		options: Partial<Fido2CredentialsTableOptions>
-	) {
-		super(db, options);
-		this.options = { ...this.options, ...options };
-	}
-
 	override async up(): Promise<void> {
 		await this.ddl.createTable({
-			name: this.options.table,
+			name: 'iam_fido2_credentials',
 			columns: [
 				// Base64URL encoded credential ID from WebAuthn (primary key)
 				{
-					name: this.options.credentialIdColumn,
+					name: 'credential_id',
 					type: ColumnType.VARCHAR,
 					length: 1024,
 					primaryKey: true,
 				},
 				// Reference to the account who owns this credential
 				{
-					name: this.options.accountIdColumn,
-					type: ColumnType.BIGINT,
+					name: 'account_id',
+					type: ColumnType.UUID,
 					required: true,
 					fk: {
-						referencesTable: this.options.accountTable,
-						referencesColumn: this.options.accountTableIdColumn,
+						referencesTable: 'iam_accounts',
+						referencesColumn: 'id',
 						onDelete: 'CASCADE',
 					},
 				},
-				CreateTimestampColumn,
-				UpdateTimestampColumn,
 				// CBOR-encoded public key from the authenticator
 				{
-					name: this.options.publicKeyColumn,
+					name: 'public_key',
 					type: ColumnType.TEXT,
 					required: true,
 				},
 				// Signature counter for replay attack prevention
 				{
-					name: this.options.counterColumn,
-					type: ColumnType.BIGINT,
+					name: 'counter',
+					type: ColumnType.UUID,
 					required: true,
 				},
 				// JSON array of supported authenticator transports
 				{
-					name: this.options.transportsColumn,
+					name: 'transports',
 					// TODO: Change to JSON when/if supported
 					type: ColumnType.TEXT,
 					required: false,
 				},
 				// User-friendly name for the authenticator device
 				{
-					name: this.options.deviceNameColumn,
+					name: 'device_name',
 					type: ColumnType.VARCHAR,
 					length: 255,
 					required: false,
 				},
+				CreateTimestampColumn,
+				UpdateTimestampColumn,
 			],
 		});
 	}
 
 	override async down(): Promise<void> {
 		await this.ddl.dropTable({
-			tables: [this.options.table],
+			tables: ['iam_fido2_credentials'],
 		});
 	}
 }

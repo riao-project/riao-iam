@@ -19,25 +19,4 @@ export class Auth extends Fido2Authentication<User> {
 		super(options);
 		this.accountRepo = options.repo;
 	}
-
-	public override getMigrations(db: Database): Record<string, Migration> {
-		return {
-			...super.getMigrations(db),
-			'add-account-display-name': new (class extends Migration {
-				override async up(): Promise<void> {
-					await this.ddl.addColumns({
-						table: 'iam_accounts',
-						columns: [
-							{
-								name: 'display_name',
-								type: ColumnType.VARCHAR,
-								length: 255,
-								required: false,
-							},
-						],
-					});
-				}
-			})(db),
-		};
-	}
 }

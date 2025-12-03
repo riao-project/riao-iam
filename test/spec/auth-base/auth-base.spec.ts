@@ -1,22 +1,13 @@
 import 'jasmine';
-import { Auth } from '../../../src/auth';
-import { Account } from '../../account';
 import { createDatabase, runMigrations } from '../../database';
+import { AuthMigrations } from '../../../src/auth/auth-migrations';
 
 describe('AuthBase', () => {
 	const db = createDatabase('auth-base');
-	const repo = db.getQueryRepository<Account>({
-		table: 'iam_accounts',
-		identifiedBy: 'id',
-	});
-
-	const auth = new (class extends Auth<Account> {
-		protected override accountRepo = repo;
-	})({ repo });
 
 	beforeAll(async () => {
 		await db.init();
-		await runMigrations(db, auth);
+		await runMigrations(db, new AuthMigrations());
 	});
 
 	it('should create account table', async () => {

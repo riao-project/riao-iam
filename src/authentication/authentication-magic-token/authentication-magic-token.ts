@@ -7,8 +7,7 @@ import {
 	TokenOptions,
 } from './magic-token';
 import { Account } from '../../../test/account';
-import { Database, Migration, QueryRepository } from '@riao/dbal';
-import { CreateMagicTokenTable } from './migrations/001-create-magic-token-table';
+import { QueryRepository } from '@riao/dbal';
 import { AuthOptions } from '../../auth/auth';
 
 export interface MagicTokenAuthenticationOptions<TAccount extends Account>
@@ -107,17 +106,5 @@ export class MagicTokenAuthentication<
 		});
 
 		return account;
-	}
-
-	public override getMigrations(db: Database): Record<string, Migration> {
-		return {
-			...super.getMigrations(db),
-			'001-create-magic-token-table': new CreateMagicTokenTable(db, {
-				table: this.magicTokenTable,
-				tokenColumn: this.tokenColumn,
-				accountTable: this.accountTable,
-				accountIdColumn: this.accountIdColumn,
-			}),
-		};
 	}
 }

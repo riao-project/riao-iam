@@ -2,6 +2,7 @@ import { createDatabase, runMigrations } from '../../../../test/database';
 import { createServer } from './server';
 import { Auth } from './auth';
 import { User } from './user';
+import { ExampleAuthMigrations } from './auth-migrations';
 
 // Configuration
 const PORT = process.env['PORT'] || 3000;
@@ -26,7 +27,7 @@ const fido2Auth = new Auth({
 // Initialize database
 async function initializeDatabase() {
 	await db.init();
-	await runMigrations(db, fido2Auth);
+	await runMigrations(db, new ExampleAuthMigrations());
 }
 
 // Start server

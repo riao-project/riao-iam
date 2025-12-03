@@ -1,11 +1,7 @@
 import { DatabaseRecordId, QueryRepository } from '@riao/dbal';
 import { Account } from '../../../test/account';
 import { AuthenticationBase } from '../authentication-base';
-import { Database, Migration } from '@riao/dbal';
-import {
-	CreateFido2CredentialsTableMigration,
-	CreateFido2ChallengesTableMigration,
-} from './migrations';
+import { Database } from '@riao/dbal';
 import {
 	generateRegistrationOptions,
 	verifyRegistrationResponse,
@@ -23,7 +19,7 @@ import {
 } from '@simplewebauthn/server';
 import { AuthOptions } from '../../auth/auth';
 
-interface StoredChallenge {
+export interface StoredChallenge {
 	challenge_id: string;
 	account_id: DatabaseRecordId;
 	challenge_type: 'registration' | 'authentication';
@@ -32,7 +28,7 @@ interface StoredChallenge {
 	created_at?: Date;
 }
 
-interface AuthenticatorCredential {
+export interface AuthenticatorCredential {
 	credential_id: string;
 	account_id: DatabaseRecordId;
 	public_key: string;
@@ -43,7 +39,7 @@ interface AuthenticatorCredential {
 	updated_at?: Date;
 }
 
-interface Fido2Credentials {
+export interface Fido2Credentials {
 	response: AuthenticationResponseJSON;
 	accountId: DatabaseRecordId;
 }
@@ -382,23 +378,5 @@ export class Fido2Authentication<
 		return await this.credentialRepo.findOne({
 			where: { credential_id: credentialID },
 		});
-	}
-
-	public override getMigrations(db: Database): Record<string, Migration> {
-		return {
-			...super.getMigrations(db),
-			'create-fido2-credentials-table':
-				new CreateFido2CredentialsTableMigration(db, {
-					table: this.credentialTable,
-					accountTable: this.accountTable,
-					accountTableIdColumn: this.accountIdColumn,
-				}),
-			'create-fido2-challenges-table':
-				new CreateFido2ChallengesTableMigration(db, {
-					table: this.challengeTable,
-					accountTable: this.accountTable,
-					accountTableIdColumn: this.accountIdColumn,
-				}),
-		};
 	}
 }

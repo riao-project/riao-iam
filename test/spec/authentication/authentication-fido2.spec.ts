@@ -1,6 +1,7 @@
 import { Fido2Authentication } from '../../../src/authentication/authentication-fido2';
 import { createDatabase, runMigrations } from '../../database';
 import { Account } from '../../account';
+import { AuthenticationFido2Migrations } from '../../../src/authentication/authentication-fido2/authentication-fido2-migrations';
 
 describe('Authentication - FIDO2', () => {
 	const db = createDatabase('authentication-fido2');
@@ -134,7 +135,7 @@ describe('Authentication - FIDO2', () => {
 
 	beforeAll(async () => {
 		await db.init();
-		await runMigrations(db, auth);
+		await runMigrations(db, new AuthenticationFido2Migrations());
 
 		// Create a shared test account for individual method tests
 		// (End-to-End tests use createTestAccount for isolation)

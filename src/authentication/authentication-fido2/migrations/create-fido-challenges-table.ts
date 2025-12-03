@@ -1,87 +1,61 @@
-import { ColumnType, Database } from '@riao/dbal';
-import { CreateTimestampColumn } from '@riao/dbal/column-pack';
+import { ColumnType } from '@riao/dbal';
+import {
+	CreateTimestampColumn,
+	UpdateTimestampColumn,
+} from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
-export interface Fido2ChallengesTableOptions {
-	table: string;
-	challengeIdColumn: string;
-	accountIdColumn: string;
-	challengeTypeColumn: string;
-	expiresAtColumn: string;
-	usedColumn: string;
-	accountTable: string;
-	accountTableIdColumn: string;
-}
-
 export class CreateFido2ChallengesTableMigration extends Migration {
-	protected override options: Fido2ChallengesTableOptions = {
-		table: 'iam_fido2_challenges',
-		challengeIdColumn: 'challenge_id',
-		accountIdColumn: 'account_id',
-		challengeTypeColumn: 'challenge_type',
-		expiresAtColumn: 'expires_at',
-		usedColumn: 'used',
-		accountTable: 'iam_accounts',
-		accountTableIdColumn: 'id',
-	};
-
-	public constructor(
-		db: Database,
-		options: Partial<Fido2ChallengesTableOptions>
-	) {
-		super(db, options);
-		this.options = { ...this.options, ...options };
-	}
-
 	override async up(): Promise<void> {
 		await this.ddl.createTable({
-			name: this.options.table,
+			name: 'iam_fido2_challenges',
 			columns: [
 				// The unique challenge string from WebAuthn (primary key)
 				{
-					name: this.options.challengeIdColumn,
+					name: 'challenge_id',
 					type: ColumnType.VARCHAR,
 					length: 512,
 					primaryKey: true,
 				},
 				// Reference to the account who owns this challenge
 				{
-					name: this.options.accountIdColumn,
-					type: ColumnType.BIGINT,
+					name: 'account_id',
+					type: ColumnType.UUID,
 					required: true,
 					fk: {
-						referencesTable: this.options.accountTable,
-						referencesColumn: this.options.accountTableIdColumn,
+						referencesTable: 'iam_accounts',
+						referencesColumn: 'id',
 						onDelete: 'CASCADE',
 					},
 				},
 				// Type of challenge: 'registration' or 'authentication'
 				{
-					name: this.options.challengeTypeColumn,
+					name: 'challenge_type',
 					type: ColumnType.VARCHAR,
 					length: 20,
 					required: true,
 				},
-				CreateTimestampColumn,
 				// Whether the challenge has been consumed/used
 				{
-					name: this.options.usedColumn,
+					name: 'used',
 					type: ColumnType.BOOL,
 					required: true,
 				},
 				// When the challenge expires (typically 5 minutes)
 				{
-					name: this.options.expiresAtColumn,
+					name: 'expires_at',
 					type: ColumnType.TIMESTAMP,
 					required: true,
 				},
+				CreateTimestampColumn,
+				UpdateTimestampColumn,
 			],
 		});
 	}
 
 	override async down(): Promise<void> {
 		await this.ddl.dropTable({
-			tables: [this.options.table],
+			tables: ['iam_fido2_challenges'],
 		});
 	}
 }

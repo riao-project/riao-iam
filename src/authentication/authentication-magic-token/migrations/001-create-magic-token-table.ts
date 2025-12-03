@@ -1,4 +1,4 @@
-import { ColumnType, Database } from '@riao/dbal';
+import { ColumnType } from '@riao/dbal';
 import {
 	BigIntKeyColumn,
 	CreateTimestampColumn,
@@ -6,28 +6,10 @@ import {
 } from '@riao/dbal/column-pack';
 import { Migration } from '@riao/dbal';
 
-interface CreateMagicTokenTableOptions {
-	table?: string;
-	tokenColumn?: string;
-	accountTable?: string;
-	accountIdColumn?: string;
-}
-
 export class CreateMagicTokenTable extends Migration {
-	protected override options: CreateMagicTokenTableOptions = {
-		table: 'iam_magic_tokens',
-		tokenColumn: 'token',
-		accountTable: 'iam_accounts',
-		accountIdColumn: 'id',
-	};
-
-	public constructor(db: Database, options: CreateMagicTokenTableOptions) {
-		super(db, options);
-	}
-
 	override async up(): Promise<void> {
 		await this.ddl.createTable({
-			name: this.options.table!,
+			name: 'iam_magic_tokens',
 			columns: [
 				BigIntKeyColumn,
 				CreateTimestampColumn,
@@ -43,20 +25,20 @@ export class CreateMagicTokenTable extends Migration {
 					length: 255,
 					required: true,
 					fk: {
-						referencesTable: this.options.accountTable!,
-						referencesColumn: this.options.accountIdColumn!,
+						referencesTable: 'iam_accounts',
+						referencesColumn: 'id',
 						onDelete: 'CASCADE',
 					},
 				},
 				{
 					...PasswordColumn,
-					name: this.options.tokenColumn!,
+					name: 'token',
 				},
 			],
 		});
 	}
 
 	override async down(): Promise<void> {
-		await this.ddl.dropTable({ tables: this.options.table! });
+		await this.ddl.dropTable({ tables: ['iam_magic_tokens'] });
 	}
 }

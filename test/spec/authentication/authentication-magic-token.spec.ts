@@ -7,6 +7,7 @@ import { KeyPairGenerator } from '../../../src/keypair';
 import { MagicTokenAuthentication } from '../../../src/authentication/authentication-magic-token';
 import { QueryRepository } from '@riao/dbal';
 import { MagicTokenRecord } from '../../../src/authentication/authentication-magic-token/magic-token';
+import { AuthenticationMagicTokenMigrations } from '../../../src/authentication/authentication-magic-token/authentication-magic-token-migrations';
 
 describe('Authentication - Magic Token', () => {
 	const db = createDatabase('authentication-magic-token');
@@ -35,7 +36,7 @@ describe('Authentication - Magic Token', () => {
 
 	beforeAll(async () => {
 		await db.init();
-		await runMigrations(db, auth);
+		await runMigrations(db, new AuthenticationMagicTokenMigrations());
 
 		await auth.createAccount({
 			login: 'auth-passwordless@example.com',
