@@ -409,25 +409,30 @@ describe('Authentication - FIDO2', () => {
 		});
 
 		it('should return false for invalid challenge', async () => {
+			// Create a dedicated test account for this test
+			const testAcc = await createTestAccount(
+				'verify-invalid-challenge-test'
+			);
+
+			// Generate registration options to create a challenge
+			await auth.generateRegistrationOptions(testAcc);
+
 			// Create mock registration response using helper
 			const mockResponse = createRegistrationResponse(
-				'mock-challenge',
-				'mock-credential-id'
+				'mock-challenge-invalid',
+				'mock-credential-invalid-id'
 			);
 
 			// Corrupt the challenge by updating it
 			await auth['challengeRepo'].update({
-				set: { id: 'invalid-challenge' },
+				set: { id: 'invalid-challenge-' + Date.now() },
 				where: {
-					account_id: testAccount.id,
+					account_id: testAcc.id,
 					challenge_type: 'registration',
 				},
 			});
 
-			const result = await auth.verifyRegistration(
-				testAccount,
-				mockResponse
-			);
+			const result = await auth.verifyRegistration(testAcc, mockResponse);
 
 			expect(result.verified).toBe(false);
 		});
