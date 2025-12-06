@@ -89,56 +89,13 @@ console.log(keyPair.algorithm);   // 'RS512'
 
 ## Encryption and Decryption
 
-Use the generated key pair with the library's `encrypt` and `decrypt` functions:
+Once you have a key pair, you can use it for encryption and decryption operations. There are two approaches available:
 
-```typescript
-import { KeyPairGenerator, encrypt, decrypt } from 'riao-iam';
+1. **Recommended**: Use the `Encryptor` and `Decryptor` classes for a reusable, object-oriented interface. See the [Encryptor & Decryptor Guide](encryptor-decryptor-guide.md) for detailed examples and best practices.
 
-const generator = new KeyPairGenerator({ algorithm: 'RS512' });
-const keyPair = generator.generate();
-
-// Encrypt with public key
-const encrypted = encrypt(keyPair.publicKey, 'Secret message');
-
-// Decrypt with private key
-const decrypted = decrypt(keyPair.privateKey, encrypted);
-console.log(decrypted.toString('utf-8')); // 'Secret message'
-```
-
-For more info on encryption and decryption, see the [Encryption and Decryption Guide](crypto-guide.md).
+2. **Advanced**: Use the lower-level `encrypt()` and `decrypt()` functions for direct control over key handling. See the [Encryption and Decryption Guide](crypto-guide.md) for detailed examples and advanced scenarios.
 
 ## Examples
-
-### Complete Workflow: Generate, Save, and Load
-
-```typescript
-import { KeyPairGenerator } from 'riao-iam';
-import * as crypto from 'crypto';
-
-// Step 1: Generate a new key pair
-const generator = new KeyPairGenerator({ algorithm: 'RS512' });
-const keyPair = generator.generate();
-
-// Step 2: Save to files
-generator.save({
-  keys: keyPair,
-  publicKeyPath: './certs/public.pem',
-  privateKeyPath: './certs/private.pem'
-});
-
-// Step 3: Later, load from files
-const loadedKeys = generator.load({
-  publicKeyPath: './certs/public.pem',
-  privateKeyPath: './certs/private.pem'
-});
-
-// Step 4: Use for encryption
-import { encrypt, decrypt } from '@riao/iam';
-const encrypted = encrypt(loadedKeys.publicKey, 'Hello, World!');
-const decrypted = decrypt(loadedKeys.privateKey, encrypted);
-
-console.log(decrypted.toString('utf-8')); // 'Hello, World!'
-```
 
 ### Choosing the Right Algorithm
 

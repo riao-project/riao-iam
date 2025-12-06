@@ -14,3 +14,27 @@ export function decrypt(
 ): Buffer {
 	return crypto.privateDecrypt(privateKey, encryptedData);
 }
+
+export class Encryptor {
+	private publicKey: crypto.KeyObject;
+
+	constructor(publicKey: crypto.KeyObject) {
+		this.publicKey = publicKey;
+	}
+
+	encrypt(data: string | Buffer): Buffer {
+		return encrypt(this.publicKey, data);
+	}
+}
+
+export class Decryptor {
+	private privateKey: crypto.KeyObject;
+
+	constructor(privateKey: crypto.KeyObject) {
+		this.privateKey = privateKey;
+	}
+
+	decrypt(encryptedData: Buffer): Buffer {
+		return decrypt(this.privateKey, encryptedData);
+	}
+}

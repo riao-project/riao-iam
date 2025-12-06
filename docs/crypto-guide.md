@@ -1,6 +1,8 @@
 # Encryption and Decryption Guide
 
-The `encrypt` and `decrypt` functions provide a simple interface for public-key cryptography operations using RSA key pairs. These functions are ideal for securing sensitive data that needs to be transmitted or stored.
+> **Note**: For most use cases, we recommend using the [`Encryptor` and `Decryptor` classes](encryptor-decryptor-guide.md) instead of passing keys around your application. This guide is intended for advanced users who need direct access to encryption functions.
+
+The `encrypt` and `decrypt` functions provide a lower-level interface for public-key cryptography operations using RSA key pairs. These functions are ideal for advanced scenarios or when you need direct control over key handling.
 
 ## Table of Contents
 
@@ -235,22 +237,24 @@ const keyPair = generator.generate();
 const data = 'Confidential';
 const encrypted = encrypt(keyPair.publicKey, data);
 const decrypted = decrypt(keyPair.privateKey, encrypted);
-
-// Save keys for later use
-generator.save({
-  keys: keyPair,
-  publicKeyPath: './public.pem',
-  privateKeyPath: './private.pem'
-});
-
-// Load and use later
-const loadedKeys = generator.load({
-  publicKeyPath: './public.pem',
-  privateKeyPath: './private.pem'
-});
-
-const encrypted2 = encrypt(loadedKeys.publicKey, data);
-const decrypted2 = decrypt(loadedKeys.privateKey, encrypted2);
 ```
 
-See the [KeyPair Usage Guide](keypair-guide.md) for more information on key pair generation and management.
+For more details on generating and managing key pairs, see the [KeyPair Usage Guide](keypair-guide.md).
+
+**For most applications, consider using the `Encryptor` and `Decryptor` classes instead**, which provide a more convenient object-oriented interface:
+
+```typescript
+import { Encryptor, Decryptor, KeyPairGenerator } from '@riao/iam';
+
+const generator = new KeyPairGenerator({ algorithm: 'RS512' });
+const keyPair = generator.generate();
+
+const encryptor = new Encryptor(keyPair.publicKey);
+const decryptor = new Decryptor(keyPair.privateKey);
+
+// Cleaner, reusable interface
+const encrypted = encryptor.encrypt('Confidential');
+const decrypted = decryptor.decrypt(encrypted);
+```
+
+See the [Encryptor & Decryptor Guide](encryptor-decryptor-guide.md) for more information.
