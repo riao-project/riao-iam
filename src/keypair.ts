@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 
 export type KeyPairAlgorithm =
 	| 'RS256'
@@ -72,12 +72,12 @@ export class KeyPairGenerator {
 		};
 	}
 
-	public load(options: {
+	public async load(options: {
 		publicKeyPath: string;
 		privateKeyPath: string;
-	}): KeyPair {
-		const publicKey = readFileSync(options.publicKeyPath).toString();
-		const privateKey = readFileSync(options.privateKeyPath).toString();
+	}): Promise<KeyPair> {
+		const publicKey = (await readFile(options.publicKeyPath)).toString();
+		const privateKey = (await readFile(options.privateKeyPath)).toString();
 
 		return {
 			algorithm: this.algorithm,
@@ -86,19 +86,19 @@ export class KeyPairGenerator {
 		};
 	}
 
-	public save(options: {
+	public async save(options: {
 		keys: KeyPair;
 		publicKeyPath: string;
 		privateKeyPath: string;
-	}): void {
+	}): Promise<void> {
 		const publicKey = options.keys.publicKey;
 		const privateKey = options.keys.privateKey;
 
-		writeFileSync(
+		await writeFile(
 			options.publicKeyPath,
 			publicKey.export({ format: 'pem', type: 'spki' })
 		);
-		writeFileSync(
+		await writeFile(
 			options.privateKeyPath,
 			privateKey.export({ format: 'pem', type: 'pkcs8' })
 		);

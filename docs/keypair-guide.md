@@ -59,7 +59,7 @@ import { KeyPairGenerator } from '@riao/iam';
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
 const keyPair = generator.generate();
 
-generator.save({
+await generator.save({
   keys: keyPair,
   publicKeyPath: './keys/public.pem',
   privateKeyPath: './keys/private.pem'
@@ -77,7 +77,7 @@ import { KeyPairGenerator } from '@riao/iam';
 
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
 
-const keyPair = generator.load({
+const keyPair = await generator.load({
   publicKeyPath: './keys/public.pem',
   privateKeyPath: './keys/private.pem'
 });
@@ -139,7 +139,7 @@ Save the public key for certificate pinning in your application:
 const generator = new KeyPairGenerator({ algorithm: 'ES256' });
 const keyPair = generator.generate();
 
-generator.save({
+await generator.save({
   keys: keyPair,
   publicKeyPath: './secure/pin.pem',
   privateKeyPath: './secure/key.pem' // Keep secure

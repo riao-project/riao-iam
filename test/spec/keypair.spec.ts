@@ -4,17 +4,17 @@ import { KeyPairAlgorithm, KeyPairGenerator } from '../../src/keypair';
 import * as crypto from 'crypto';
 
 describe('KeyPairGenerator', () => {
-	it('should allow saving and loading keys from files', () => {
+	it('should allow saving and loading keys from files', async () => {
 		const generator = new KeyPairGenerator({ algorithm: 'RS256' });
 		const keypair = generator.generate();
 
-		generator.save({
+		await generator.save({
 			keys: keypair,
 			publicKeyPath: 'test/keys/keypair-public.key',
 			privateKeyPath: 'test/keys/keypair-private.key',
 		});
 
-		const loaded = generator.load({
+		const loaded = await generator.load({
 			publicKeyPath: 'test/keys/keypair-public.key',
 			privateKeyPath: 'test/keys/keypair-private.key',
 		});
