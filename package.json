@@ -22,12 +22,16 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"bcrypt": "^6.0.0"
+		"bcrypt": "^6.0.0",
+		"jsonwebtoken": "^9.0.3",
+		"ms": "^2.1.3"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
 		"@types/bcrypt": "^6.0.0",
 		"@types/jasmine": "^5.1.4",
+		"@types/jsonwebtoken": "^9.0.10",
+		"@types/ms": "^2.1.0",
 		"@types/node": "^18.19.39",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
 		"eslint": "^8.57.0",
