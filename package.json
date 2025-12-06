@@ -21,8 +21,12 @@
 		"script": "ts-node scripts",
 		"publish": "npm run script -- publish"
 	},
+	"dependencies": {
+		"bcrypt": "^6.0.0"
+	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
+		"@types/bcrypt": "^6.0.0",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^18.19.39",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",

@@ -34,6 +34,7 @@ console.log(decrypted.toString()); // 'Secret message'
 - [Encryptor & Decryptor Guide](docs/encryptor-decryptor-guide.md) - **Recommended** - Object-oriented encryption/decryption interface
 - [KeyPair Usage Guide](docs/keypair-guide.md) - Learn how to use the KeyPairGenerator for cryptographic operations
 - [Encryption & Decryption Guide](docs/crypto-guide.md) - Lower-level `encrypt` and `decrypt` functions (for advanced use cases)
+- [Hash Guide](docs/hash-guide.md) - Password hashing and verification with bcrypt
 
 ## Contributing & Development
 
