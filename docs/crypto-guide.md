@@ -38,7 +38,7 @@ The `encrypt` function encrypts data using RSA public-key encryption. The functi
 ### Example
 
 ```typescript
-import { encrypt } from 'riao-iam';
+import { encrypt } from '@riao/iam';
 import * as crypto from 'crypto';
 
 // Assuming you have a publicKey from KeyPairGenerator
@@ -66,7 +66,7 @@ The `decrypt` function reverses the encryption process using the corresponding p
 ### Example
 
 ```typescript
-import { decrypt } from 'riao-iam';
+import { decrypt } from '@riao/iam';
 
 // Assuming you have encryptedData and privateKey
 const decrypted = decrypt(privateKey, encryptedData);
@@ -78,8 +78,8 @@ console.log(decrypted.toString('utf-8')); // Original message
 ### Complete Encrypt/Decrypt Workflow
 
 ```typescript
-import { encrypt, decrypt } from 'riao-iam';
-import { KeyPairGenerator } from 'riao-iam';
+import { encrypt, decrypt } from '@riao/iam';
+import { KeyPairGenerator } from '@riao/iam';
 
 // Step 1: Generate a key pair
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
@@ -98,7 +98,7 @@ console.log('Decrypted:', decrypted.toString('utf-8')); // 'Sensitive informatio
 ### Encrypting JSON Data
 
 ```typescript
-import { encrypt, decrypt } from 'riao-iam';
+import { encrypt, decrypt } from '@riao/iam';
 
 const keyPair = generator.generate();
 
@@ -121,7 +121,7 @@ console.log(restored); // { id: 123, email: 'user@example.com', isAdmin: false }
 ### Multiple Recipients Scenario
 
 ```typescript
-import { encrypt } from 'riao-iam';
+import { encrypt } from '@riao/iam';
 
 // Different recipients with their own key pairs
 const recipient1 = new KeyPairGenerator({ algorithm: 'RS512' }).generate();
@@ -141,8 +141,8 @@ const decrypted2 = decrypt(recipient2.privateKey, encryptedFor2);
 ### File-based Encryption
 
 ```typescript
-import { encrypt, decrypt } from 'riao-iam';
-import { KeyPairGenerator } from 'riao-iam';
+import { encrypt, decrypt } from '@riao/iam';
+import { KeyPairGenerator } from '@riao/iam';
 import * as fs from 'fs';
 
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
@@ -196,7 +196,7 @@ For larger data, consider:
 ### Common Errors
 
 ```typescript
-import { encrypt, decrypt } from 'riao-iam';
+import { encrypt, decrypt } from '@riao/iam';
 
 try {
   // Error: privateKey cannot be used for encryption
@@ -225,7 +225,7 @@ try {
 The `encrypt` and `decrypt` functions are designed to work seamlessly with `KeyPairGenerator`:
 
 ```typescript
-import { encrypt, decrypt, KeyPairGenerator } from 'riao-iam';
+import { encrypt, decrypt, KeyPairGenerator } from '@riao/iam';
 
 // Generate keys
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });

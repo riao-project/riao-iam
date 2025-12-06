@@ -30,7 +30,7 @@ The `KeyPairGenerator` supports the following algorithms:
 ### RSA Key Pair (RS512)
 
 ```typescript
-import { KeyPairGenerator } from 'riao-iam';
+import { KeyPairGenerator } from '@riao/iam';
 
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
 const keyPair = generator.generate();
@@ -54,7 +54,7 @@ const keyPair = generator.generate();
 Save generated key pairs to files in PEM format:
 
 ```typescript
-import { KeyPairGenerator } from 'riao-iam';
+import { KeyPairGenerator } from '@riao/iam';
 
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
 const keyPair = generator.generate();
@@ -73,7 +73,7 @@ The keys are exported in standard PEM format suitable for use with Node.js and o
 Load previously saved key pairs from files:
 
 ```typescript
-import { KeyPairGenerator } from 'riao-iam';
+import { KeyPairGenerator } from '@riao/iam';
 
 const generator = new KeyPairGenerator({ algorithm: 'RS512' });
 

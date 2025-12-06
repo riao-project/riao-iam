@@ -1,4 +1,4 @@
-# riao-iam - Readme
+# @riao/iam - Readme
 
 ## Installation
 
