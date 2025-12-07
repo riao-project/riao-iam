@@ -1,7 +1,7 @@
 {
-	"name": "riao-iam",
-	"version": "1.0.0",
-	"description": "riao-iam",
+	"name": "@riao/iam",
+	"version": "3.0.0",
+	"description": "Identity Access Management for Riao",
 	"private": "true",
 	"typescript-template": {
 		"base": "1.0.1",

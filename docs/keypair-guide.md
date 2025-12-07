@@ -16,7 +16,7 @@ The `KeyPairGenerator` class provides utilities for generating, saving, and load
 The `KeyPairGenerator` supports the following algorithms:
 
 ### RSA Algorithms
-- **RS512**: RSA with SHA-256 (2048-bit keys)
+- **RS256**: RSA with SHA-256 (2048-bit keys)
 - **RS384**: RSA with SHA-384 (3072-bit keys)
 - **RS512**: RSA with SHA-512 (4096-bit keys)
 
