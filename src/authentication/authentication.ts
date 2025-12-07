@@ -1,13 +1,10 @@
 import { and, DatabaseRecordId, Expression, SelectQuery } from '@riao/dbal';
 import { Auth, Principal } from '../auth';
-import { Hash } from '../hash';
 import { KeyValExpression } from '@riao/dbal/expression/key-val-expression';
 
 export abstract class Authentication<
 	TPrincipal extends Principal,
 > extends Auth<TPrincipal> {
-	protected hash: Hash = new Hash();
-
 	public async createPrincipal(
 		principal: Omit<TPrincipal, 'id' | 'create_timestamp'>
 	): Promise<DatabaseRecordId> {
