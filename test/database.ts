@@ -40,8 +40,13 @@ export function createDatabase(name: string): Database {
 	})();
 }
 
-export function getMigrations(db: Database, authMigrations: AuthMigrations) {
-	return Object.entries(authMigrations.getMigrations()).reduce(
+export async function getMigrations(
+	db: Database,
+	authMigrations: AuthMigrations
+) {
+	const migrationsRecord = await authMigrations.getMigrations();
+
+	return Object.entries(migrationsRecord).reduce(
 		(acc, [key, MigrationClass]) => {
 			acc[key] = new MigrationClass(db);
 			return acc;
@@ -55,7 +60,7 @@ export async function runMigrations(
 	authMigrations: AuthMigrations
 ) {
 	const runner = new MigrationRunner(db);
-	const migrations = getMigrations(db, authMigrations);
+	const migrations = await getMigrations(db, authMigrations);
 
 	return runner.run(migrations);
 }
@@ -65,7 +70,7 @@ export async function runMigrationsDown(
 	authMigrations: AuthMigrations
 ) {
 	const runner = new MigrationRunner(db);
-	const migrations = getMigrations(db, authMigrations);
+	const migrations = await getMigrations(db, authMigrations);
 
 	await runner.run(
 		migrations,

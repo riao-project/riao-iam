@@ -22,7 +22,7 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"@riao/dbal": "^3.7.1",
+		"@riao/dbal": "^3.8.0",
 		"bcrypt": "^6.0.0",
 		"jsonwebtoken": "^9.0.3",
 		"ms": "^2.1.3"
