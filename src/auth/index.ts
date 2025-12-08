@@ -1,2 +1,2 @@
-export { Auth } from './auth';
+export { Auth, AuthOptions } from './auth';
 export { Principal } from './principal';

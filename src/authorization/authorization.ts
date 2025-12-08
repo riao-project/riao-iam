@@ -1,5 +1,7 @@
 import { DatabaseRecordId } from '@riao/dbal';
-import { Auth, Principal } from '../auth';
+import { Auth, AuthOptions, Principal } from '../auth';
+
+export type AuthorizationOptions = AuthOptions;
 
 export interface AuthorizationContext<
 	TPrincipal extends Principal = Principal,
