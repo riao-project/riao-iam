@@ -15,11 +15,12 @@ export class CreatePrincipalsTableMigration extends Migration {
 				{
 					name: 'type',
 					type: ColumnType.VARCHAR,
-					length: 20,
+					length: 255,
 					required: true,
 				},
 				{
 					...UsernameColumn,
+					length: 255,
 					name: 'login',
 					required: true,
 				},
