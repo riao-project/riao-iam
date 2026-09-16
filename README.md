@@ -4,67 +4,192 @@
 
 `npm i @riao/iam`
 
-## Encryption & Key Pairs
-
-To use encryption and signing features, you need to generate a key pair. The `KeyPairGenerator` class supports generating RSA and Elliptic Curve key pairs.
-
-### Quick Start with Encryptor/Decryptor (Recommended)
-
-The `Encryptor` and `Decryptor` classes provide a simple, object-oriented interface for managing encryption and decryption:
-
-```typescript
-import { Encryptor, Decryptor, KeyPairGenerator } from '@riao/iam';
-
-// Generate a key pair
-const generator = new KeyPairGenerator({ algorithm: 'RS256' });
-const keypair = generator.generate();
-
-// Create Encryptor and Decryptor instances
-const encryptor = new Encryptor(keypair.publicKey);
-const decryptor = new Decryptor(keypair.privateKey);
-
-// Encrypt and decrypt
-const encrypted = encryptor.encrypt('Secret message');
-const decrypted = decryptor.decrypt(encrypted);
-console.log(decrypted.toString()); // 'Secret message'
-```
-
-## JSON Web Tokens (JWT)
-
-The `Jwt` class provides a secure way to generate and verify JSON Web Tokens for authentication and authorization. It supports both symmetric signing (using a shared secret) and asymmetric signing (using public/private key pairs).
+## Usage
 
 ### Quick Start
 
+@riao/iam is an Identity and Access Management (IAM) library that provides a flexible framework for:
+- **Authentication**: Validating user credentials and managing principals
+- **Authorization**: Controlling access to resources based on permissions
+
+### Core Concepts
+
+#### Principal
+A principal represents any entity (user, service, bot, or system) that can authenticate and be authorized.
+
+#### Auth Class
+Base class that manages principals and provides access to the principals repository.
+
+#### Authentication
+Abstract class extending `Auth` that handles credential validation. Implement this to create custom authentication drivers (password-based, OAuth, JWT, etc.).
+
+#### Authorization
+Abstract class extending `Auth` that manages permissions and access control. Implement this to define your authorization model.
+
+### Setup & Configuration
+
+#### 1. Initialize with a Database
+
 ```typescript
-import { Jwt } from '@riao/iam';
+import { Database } from '@riao/dbal';
+import { Authentication, Authorization } from '@riao/iam';
 
-// Create a JWT manager with a shared secret
-const jwtManager = new Jwt({
-	secret: 'your-secret-key',
-	algorithm: 'HS512',
-	expiresIn: '1h',
+const db = new Database({
+  // Your database configuration
 });
-
-// Generate a token
-const { token } = await jwtManager.generateToken({
-	userId: 'user-123',
-	role: 'admin',
-});
-
-// Verify and decode a token
-const payload = await jwtManager.decodeToken(token);
-console.log(payload.userId); // 'user-123'
 ```
 
-For detailed usage, algorithms, security best practices, and advanced patterns, see the [JWT Guide](docs/jwt-guide.md).
+#### 2. Create a Custom Authentication Driver
 
-### Documentation
+Extend the `Authentication` class to implement your authentication logic:
 
-- [Encryptor & Decryptor Guide](docs/encryptor-decryptor-guide.md) - **Recommended** - Object-oriented encryption/decryption interface
-- [KeyPair Usage Guide](docs/keypair-guide.md) - Learn how to use the KeyPairGenerator for cryptographic operations
-- [Encryption & Decryption Guide](docs/crypto-guide.md) - Lower-level `encrypt` and `decrypt` functions (for advanced use cases)
-- [Hash Guide](docs/hash-guide.md) - Password hashing and verification with bcrypt
-- [JWT Guide](docs/jwt-guide.md) - Generate and verify JSON Web Tokens for authentication and authorization
+```typescript
+import { Authentication, Principal } from '@riao/iam';
+
+class PasswordAuthentication extends Authentication<Principal> {
+  async authenticate(credentials: { 
+    login: string; 
+    password: string 
+  }): Promise<Principal | null> {
+    // Find the principal by login
+    const principal = await this.findActivePrincipal({
+      where: { login: credentials.login }
+    });
+    
+    if (!principal) {
+		return null;
+	}
+    
+    // Verify password (you'd use your hash verification logic)
+    const isValid = await verifyPassword(
+      credentials.password, 
+      principal.passwordHash
+    );
+    
+    return isValid ? principal : null;
+  }
+
+  // Implement the isActiveQuery if needed for custom active status logic
+  protected isActiveQuery() {
+    return { where: { deactivate_timestamp: null } };
+  }
+}
+
+// Initialize your authentication driver
+const auth = new PasswordAuthentication({ db });
+```
+
+#### 3. Create a Custom Authorization Driver
+
+Extend the `Authorization` class to implement your permission model:
+
+```typescript
+import { Authorization, AuthorizationContext, AuthorizationResult } from '@riao/iam';
+
+class RoleBasedAuthorization extends Authorization<Principal> {
+  async evaluate(context: AuthorizationContext<Principal>): Promise<AuthorizationResult> {
+    const { principal, action, resource } = context;
+    
+    // Implement your authorization logic
+    const hasPermission = await this.checkPermission(context);
+    return hasPermission;
+  }
+
+  async grantPermission(options: GrantPermissionOptions): Promise<void> {
+    // Implement grant logic
+  }
+
+  async revokePermission(options: RevokePermissionOptions): Promise<void> {
+    // Implement revoke logic
+  }
+}
+
+const authz = new RoleBasedAuthorization({ db });
+```
+
+### Common Tasks
+
+#### Authenticate a User
+
+```typescript
+const credentials = { login: 'john.doe', password: 'secret123' };
+const principal = await auth.authenticate(credentials);
+
+if (principal) {
+  console.log(`Authenticated as: ${principal.name}`);
+} else {
+  console.log('Authentication failed');
+}
+```
+
+#### Create a New Principal
+
+```typescript
+const principalId = await auth.createPrincipal({
+  login: 'jane.doe',
+  name: 'Jane Doe',
+  type: 'user',
+  deactivate_timestamp: null
+});
+
+console.log(`Created principal with ID: ${principalId}`);
+```
+
+#### Check Authorization
+
+```typescript
+const context = {
+  principal: authenticatedPrincipal,
+  resource: 'document-123',
+  action: 'read'
+};
+
+const isAuthorized = await authz.isAuthorized(context);
+if (isAuthorized) {
+  console.log('Access granted');
+} else {
+  console.log('Access denied');
+}
+```
+
+#### Grant Permissions
+
+```typescript
+await authz.grantPermission({
+  principalId: principal.id,
+  action: 'delete',
+  resource: 'document-123',
+  metadata: { grantedBy: 'admin', grantedAt: new Date() }
+});
+```
+
+#### Revoke Permissions
+
+```typescript
+await authz.revokePermission({
+  principalId: principal.id,
+  action: 'delete',
+  resource: 'document-123'
+});
+```
+
+### Advanced
+
+For detailed information on:
+- Building custom authentication drivers, see [authentication-driver-guide.md](docs/authentication-driver-guide.md)
+- Building custom authorization drivers, see [authorization-driver-guide.md](docs/authorization-driver-guide.md)
+- Database migrations and schema setup, see [Database Setup](#database-setup)
+
+### Database Setup
+
+@riao/iam requires database tables to store principals and permissions. Use the `AuthMigrations` class to set up the required schema:
+
+```typescript
+import { AuthMigrations } from '@riao/iam';
+
+const migrations = new AuthMigrations();
+await db.runMigrations(migrations);
+```
 
 ## Contributing & Development
 

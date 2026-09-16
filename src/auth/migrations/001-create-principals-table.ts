@@ -1,7 +1,6 @@
 import {
 	CreateTimestampColumn,
 	NameColumn,
-	UsernameColumn,
 	UUIDKeyColumn,
 } from '@riao/dbal/column-pack';
 import { ColumnType, Migration } from '@riao/dbal';
