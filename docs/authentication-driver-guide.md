@@ -128,17 +128,10 @@ expect(principal).toBeNull();
 
 #### Authentication Protection Hooks
 
-Drivers can call `beforeAuthenticationAttempt()`,
-`recordAuthenticationFailure()`, and `recordAuthenticationSuccess()` to
-integrate an `AuthenticationProtection` implementation.
+Drivers can call `beforeAuthenticationAttempt()`, `recordAuthenticationFailure()`, and `recordAuthenticationSuccess()` to integrate an `AuthenticationProtection` implementation.
 
-An `allowed: false` result means the driver must stop before looking up a
-principal or verifying credentials. Under the base
-`authenticate(): Promise<TPrincipal | null>` contract, return `null` and do
-not invoke either recording hook: a denied request is not a failed credential
-check. If the attempt is allowed, call exactly one of
-`recordAuthenticationFailure()` or `recordAuthenticationSuccess()` after the
-credential check.
+An `allowed: false` result means the driver must stop before looking up a principal or verifying credentials. Under the base `authenticate(): Promise<TPrincipal | null>` contract, return `null` and do not invoke either recording hook: a denied request is not a failed credential
+check. If the attempt is allowed, call exactly one of `recordAuthenticationFailure()` or `recordAuthenticationSuccess()` after the credential check.
 
 ```typescript
 public async authenticate(credentials: Credentials): Promise<Principal | null> {
@@ -163,12 +156,7 @@ public async authenticate(credentials: Credentials): Promise<Principal | null> {
 }
 ```
 
-`retryAfterSeconds` is advisory delay information, in seconds, for the caller.
-The base return type cannot carry it and the package does not define a lockout
-error. Keep `authenticate()` compatible by returning `null`; when an
-application must distinguish lockout from invalid credentials, capture the
-protection result in a driver-specific method or an authentication service and
-map it to a structured application response:
+`retryAfterSeconds` is advisory delay information, in seconds, for the caller. The base return type cannot carry it and the package does not define a lockout error. Keep `authenticate()` compatible by returning `null`; when an application must distinguish lockout from invalid credentials, capture the protection result in a driver-specific method or an authentication service and map it to a structured application response:
 
 ```typescript
 interface AuthenticationDeniedResponse {
@@ -178,12 +166,7 @@ interface AuthenticationDeniedResponse {
 }
 ```
 
-For an HTTP API, return `429 Too Many Requests`, set `Retry-After` to the same
-number of seconds when supplied, and use the response shape above. Avoid
-revealing whether the subject identifies an existing principal. Throwing an
-application-specific error is also valid when the framework uses centralized
-error handling, but it should be translated to that same external response;
-no specific error class is required by IAM.
+For an HTTP API, return `429 Too Many Requests`, set `Retry-After` to the same number of seconds when supplied, and use the response shape above. Avoid revealing whether the subject identifies an existing principal. Throwing an application-specific error is also valid when the framework uses centralized error handling, but it should be translated to that same external response; no specific error class is required by IAM.
 
 #### `isActiveQuery(): undefined | Expression<TPrincipal>`
 

@@ -199,10 +199,7 @@ const protection: AuthenticationProtection = {
 };
 ```
 
-When `beforeAttempt()` returns `allowed: false`, the driver should skip
-credential verification and return `null`. See the
-[authentication driver guide](docs/authentication-driver-guide.md#authentication-protection-hooks)
-for hook behavior and recommendations for surfacing `retryAfterSeconds`.
+When `beforeAttempt()` returns `allowed: false`, the driver should skip credential verification and return `null`. See the [authentication driver guide](docs/authentication-driver-guide.md#authentication-protection-hooks) for hook behavior and recommendations for surfacing `retryAfterSeconds`.
 
 ### Advanced
 
