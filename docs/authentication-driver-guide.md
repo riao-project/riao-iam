@@ -224,7 +224,7 @@ interface CustomPrincipal extends DatabaseRecord {
 
 ```typescript
 import { Authentication } from '@riao/iam/authentication';
-import { AuthOptions } from '@riao/iam/auth';
+import { AuthenticationOptions } from '@riao/iam/authentication';
 import { Principal } from '@riao/iam/auth';
 import { Expression } from '@riao/dbal';
 
@@ -234,7 +234,7 @@ export class CustomAuthDriver extends Authentication<Principal> {
 	protected principalIdColumn = 'id';
 	protected loginColumn = 'login';
 
-	constructor(options: AuthOptions) {
+	constructor(options: AuthenticationOptions) {
 		super(options);
 	}
 
@@ -372,7 +372,14 @@ const db = new Database({
 	// ... database config
 });
 
-const auth = new CustomAuthDriver({ db });
+const auth = new CustomAuthDriver({
+	db,
+	authenticationProtection: {
+		beforeAttempt: async () => ({ allowed: true }),
+		onFailure: async () => {},
+		onSuccess: async () => {},
+	},
+});
 
 // Create a principal
 const principalId = await auth.createPrincipal({
