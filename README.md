@@ -173,6 +173,34 @@ await authz.revokePermission({
 });
 ```
 
+### Authentication Protection and Lockout
+
+Authentication drivers can optionally plug into a shared protection contract to prevent brute-force attempts and enforce temporary lockout windows.
+
+```typescript
+import {
+  AuthenticationAttempt,
+  AuthenticationProtection,
+  AuthenticationProtectionResult,
+} from '@riao/iam/authentication';
+
+const protection: AuthenticationProtection = {
+  beforeAttempt: async (
+    attempt: AuthenticationAttempt
+  ): Promise<AuthenticationProtectionResult> => {
+    return { allowed: true };
+  },
+  onFailure: async (attempt: AuthenticationAttempt) => {
+    // Record failed auth attempt metadata or update a rate limit store.
+  },
+  onSuccess: async (attempt: AuthenticationAttempt) => {
+    // Reset counters or clear temporary blocks.
+  },
+};
+```
+
+When `beforeAttempt()` returns `allowed: false`, the driver should skip credential verification and return `null`. See the [authentication driver guide](docs/authentication-driver-guide.md#authentication-protection-hooks) for hook behavior and recommendations for surfacing `retryAfterSeconds`.
+
 ### Advanced
 
 For detailed information on:

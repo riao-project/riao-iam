@@ -2,6 +2,11 @@ import { Authentication } from '../../../src/authentication';
 import { Principal } from '../../../src/auth';
 import { QueryRepository, Expression } from '@riao/dbal';
 import { db } from '../../database';
+import {
+	AuthenticationAttempt,
+	AuthenticationProtection,
+	AuthenticationProtectionResult,
+} from '../../../src/authentication/protection';
 
 describe('Authentication - Base', () => {
 	let repo: QueryRepository<Principal>;
@@ -30,6 +35,121 @@ describe('Authentication - Base', () => {
 		}
 
 		expect(principal.id).toEqual(id as string);
+	});
+
+	it('delegates authentication protection callbacks', async () => {
+		const attempts: string[] = [];
+		const protection: AuthenticationProtection = {
+			beforeAttempt: async (
+				attempt: AuthenticationAttempt
+			): Promise<AuthenticationProtectionResult> => {
+				attempts.push(`before:${attempt.subject}`);
+				return { allowed: true };
+			},
+			onFailure: async (attempt: AuthenticationAttempt) => {
+				attempts.push(`failure:${attempt.subject}`);
+			},
+			onSuccess: async (attempt: AuthenticationAttempt) => {
+				attempts.push(`success:${attempt.subject}`);
+			},
+		};
+
+		const protectedAuth = new (class extends Authentication<Principal> {
+			public async authenticate(): Promise<Principal | null> {
+				return null;
+			}
+
+			public async exerciseProtection(
+				attempt: AuthenticationAttempt
+			): Promise<void> {
+				await this.beforeAuthenticationAttempt(attempt);
+				await this.recordAuthenticationFailure(attempt);
+				await this.recordAuthenticationSuccess(attempt);
+			}
+		})({ db, authenticationProtection: protection });
+
+		await protectedAuth.exerciseProtection({
+			scheme: 'test',
+			subject: 'subject-1',
+		});
+
+		expect(attempts).toEqual([
+			'before:subject-1',
+			'failure:subject-1',
+			'success:subject-1',
+		]);
+	});
+
+	it('uses no-op authentication protection by default', async () => {
+		const unprotectedAuth = new (class extends Authentication<Principal> {
+			public async authenticate(): Promise<Principal | null> {
+				return null;
+			}
+
+			public async exerciseProtection(
+				attempt: AuthenticationAttempt
+			): Promise<AuthenticationProtectionResult> {
+				const result = await this.beforeAuthenticationAttempt(attempt);
+				await this.recordAuthenticationFailure(attempt);
+				await this.recordAuthenticationSuccess(attempt);
+
+				return result;
+			}
+		})({ db });
+
+		const result = await unprotectedAuth.exerciseProtection({
+			scheme: 'test',
+			subject: 'subject-1',
+		});
+
+		expect(result).toEqual({ allowed: true });
+	});
+
+	it('short-circuits authentication when protection denies an attempt', async () => {
+		const callbacks: string[] = [];
+		const protection: AuthenticationProtection = {
+			beforeAttempt: async () => {
+				callbacks.push('before');
+				return { allowed: false, retryAfterSeconds: 30 };
+			},
+			onFailure: async () => {
+				callbacks.push('failure');
+			},
+			onSuccess: async () => {
+				callbacks.push('success');
+			},
+		};
+
+		const protectedAuth = new (class extends Authentication<Principal> {
+			public credentialsChecked = false;
+			public protectionResult?: AuthenticationProtectionResult;
+
+			public async authenticate(
+				subject: string
+			): Promise<Principal | null> {
+				this.protectionResult = await this.beforeAuthenticationAttempt({
+					scheme: 'test',
+					subject,
+				});
+
+				if (!this.protectionResult.allowed) {
+					return null;
+				}
+
+				this.credentialsChecked = true;
+				return null;
+			}
+		})({ db, authenticationProtection: protection });
+
+		const principal = await protectedAuth.authenticate('subject-1');
+
+		expect(principal).toBeNull();
+		expect(protectedAuth.protectionResult).toEqual({
+			allowed: false,
+			retryAfterSeconds: 30,
+		});
+		expect(protectedAuth.credentialsChecked).toBe(false);
+		expect(callbacks).toEqual(['before']);
 	});
 
 	it('can create a principal with all fields', async () => {

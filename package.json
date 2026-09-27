@@ -22,7 +22,7 @@
 		"publish": "npm run script -- publish"
 	},
 	"dependencies": {
-		"@riao/dbal": "^3.8.0"
+		"@riao/dbal": "^3.12.0"
 	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
