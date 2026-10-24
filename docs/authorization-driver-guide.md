@@ -10,7 +10,7 @@ The **Authorization base class** is an abstract class that extends the `Auth` cl
 
 ```
 Auth<TPrincipal>
-  └── Authorization<TPrincipal> (abstract)
+  └── Authorization<TPrincipal, TSubject = TPrincipal> (abstract)
         ├── RBAC Implementation
         ├── ReBAC Implementation
         ├── ABAC Implementation
@@ -23,18 +23,37 @@ Auth<TPrincipal>
 
 The Authorization class is generic over a `TPrincipal` type, allowing you to work with any principal structure while maintaining type safety.
 
+`TPrincipal` remains the stored IAM principal. A second generic parameter,
+`TSubject`, selects the trusted subject required by the policy and defaults to
+`TPrincipal`. ID-only models can extend
+`Authorization<Principal, AuthorizationSubject>`, where `AuthorizationSubject`
+is `{ id: string }`. Attribute-based models should retain their richer subject
+type or explicitly resolve trusted attributes; never cast an ID-only request
+principal into a full database principal.
+
 ### Authorization Context
 
 The `AuthorizationContext` encapsulates all information needed to evaluate an authorization decision.
 
 ```typescript
-interface AuthorizationContext<TPrincipal extends Principal = Principal> {
-	principal: TPrincipal;           // The subject requesting access
+interface AuthorizationContext<TSubject extends AuthorizationSubject = Principal> {
+	principal: TSubject;           // The subject requesting access
 	action: string;                   // The action being requested (e.g., 'read', 'write', 'delete')
 	resource?: string | Record<string, unknown>;  // The resource being accessed
 	metadata?: Record<string, unknown>;           // Additional context (IP, time, etc.)
 }
 ```
+
+`AuthorizationRequirement` contains the action, resource, and metadata without
+the subject. `AuthorizationService<TSubject>` exposes `evaluate(context)`.
+These contracts have no HTTP-framework dependency and are structurally
+compatible with api-machine's ID-only authorization service when `TSubject` is
+`AuthorizationSubject`. All three evaluation helpers (`evaluate`,
+`isAuthorized`, and `checkPermission`) use the same subject type.
+
+Only use principals established by trusted authentication middleware or an
+application session. A principal ID supplied in a request body is not evidence
+of authentication.
 
 ### Authorization Result
 
@@ -53,7 +72,7 @@ interface AuthorizationResult {
 
 These methods **must** be implemented by subclasses:
 
-#### 1. `evaluate(context: AuthorizationContext<TPrincipal>): Promise<AuthorizationResult>`
+#### 1. `evaluate(context: AuthorizationContext<TSubject>): Promise<AuthorizationResult>`
 
 Evaluates whether a principal is authorized to perform an action on a resource.
 
@@ -136,7 +155,7 @@ public async revokePermission(
 
 ### Public Methods
 
-#### 1. `isAuthorized(context: AuthorizationContext<TPrincipal>): Promise<boolean>`
+#### 1. `isAuthorized(context: AuthorizationContext<TSubject>): Promise<boolean>`
 
 Convenience method that checks if a principal is authorized for an action.
 
@@ -161,7 +180,7 @@ if (isAllowed) {
 
 ### Protected Methods
 
-#### 2. `checkPermission(context: AuthorizationContext<TPrincipal>): Promise<AuthorizationResult>`
+#### 2. `checkPermission(context: AuthorizationContext<TSubject>): Promise<AuthorizationResult>`
 
 Default permission checking logic. Override this in subclasses for custom authorization models.
 
@@ -224,12 +243,7 @@ export class RBACAuthorization extends Authorization<Principal> {
 	public async evaluate(
 		context: AuthorizationContext<Principal>
 	): Promise<AuthorizationResult> {
-		return this.checkPermission(
-			context.principal,
-			context.action,
-			context.resource,
-			context.metadata
-		);
+		return this.checkPermission(context);
 	}
 
 	public async grantPermission(
@@ -335,7 +349,9 @@ export class ABACAuthorization extends Authorization<Principal> {
 const auth = new YourAuthorizationImpl({ db });
 
 // Check simple authorization
-const canRead = await auth.isAuthorized(user, 'read', 'document_123');
+const canRead = await auth.isAuthorized({
+	principal: user, action: 'read', resource: 'document_123',
+});
 
 if (!canRead) {
 	throw new Error('Unauthorized');
@@ -366,15 +382,17 @@ if (!result.allowed) {
 
 ```typescript
 // Grant a permission
-await auth.grantPermission(userId, 'admin_access', undefined, {
-	grantedBy: 'super_admin',
-	grantedAt: new Date(),
+await auth.grantPermission({
+	principalId: userId,
+	action: 'admin_access',
+	metadata: { grantedBy: 'super_admin', grantedAt: new Date() },
 });
 
 // Revoke a permission
-await auth.revokePermission(userId, 'admin_access', undefined, {
-	revokedBy: 'super_admin',
-	revokedAt: new Date(),
+await auth.revokePermission({
+	principalId: userId,
+	action: 'admin_access',
+	metadata: { revokedBy: 'super_admin', revokedAt: new Date() },
 });
 ```
 
@@ -399,12 +417,7 @@ public async evaluate(context: AuthorizationContext<Principal>): Promise<Authori
 		return cached.result;
 	}
 
-	const result = await this.checkPermission(
-		context.principal,
-		context.action,
-		context.resource,
-		context.metadata
-	);
+	const result = await this.checkPermission(context);
 
 	this.cache.set(cacheKey, {
 		result,
@@ -417,12 +430,14 @@ public async evaluate(context: AuthorizationContext<Principal>): Promise<Authori
 
 ### 3. Provide Detailed Reasons
 
-Always provide meaningful reasons for denials to help with debugging and logging:
+Provide client-safe reasons for denials. HTTP adapters may expose `reason` in a
+403 response. Keep exception messages, policy internals, and sensitive attributes
+in restricted server logs rather than in denial results:
 
 ```typescript
 return {
 	allowed: false,
-	reason: `Principal (${principal.id}) lacks role 'admin' for action 'delete'`,
+	reason: 'Insufficient permissions',
 };
 ```
 
@@ -432,12 +447,7 @@ Log authorization decisions for security and compliance:
 
 ```typescript
 public async evaluate(context: AuthorizationContext<Principal>): Promise<AuthorizationResult> {
-	const result = await this.checkPermission(
-		context.principal,
-		context.action,
-		context.resource,
-		context.metadata
-	);
+	const result = await this.checkPermission(context);
 
 	this.logger.info({
 		event: 'authorization_check',
@@ -454,19 +464,16 @@ public async evaluate(context: AuthorizationContext<Principal>): Promise<Authori
 
 ### 5. Error Handling
 
-Handle authorization errors appropriately without exposing sensitive information:
+Return `{ allowed: false }` for a genuine policy denial. Database or policy-service
+failures must reject, including through `isAuthorized()`, rather than becoming
+denials. Log them at the application boundary and preserve the original error.
+HTTP adapters distinguish missing authentication (401), denial (403), and
+unexpected operational failure (500):
 
 ```typescript
-try {
-	const result = await auth.evaluate(context);
-	if (!result.allowed) {
-		throw new UnauthorizedError('Access denied');
-	}
-} catch (error) {
-	// Log internal details
-	logger.error('Authorization check failed', error);
-	// Return safe error to client
-	throw new UnauthorizedError('Access denied');
+const result = await auth.evaluate(context);
+if (!result.allowed) {
+	throw new ForbiddenError(result.reason || 'Access denied');
 }
 ```
 
@@ -479,12 +486,7 @@ class TestAuthorization extends Authorization<Principal> {
 	public async evaluate(
 		context: AuthorizationContext<Principal>
 	): Promise<AuthorizationResult> {
-		return this.checkPermission(
-			context.principal,
-			context.action,
-			context.resource,
-			context.metadata
-		);
+		return this.checkPermission(context);
 	}
 
 	public async grantPermission(): Promise<void> {

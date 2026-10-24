@@ -29,7 +29,7 @@ interface Principal {
 	login: string;
 	name: string;
 	create_timestamp: Date;
-	deactivate_timestamp: Date | null;  // null when active
+	deactivate_timestamp?: Date;
 }
 ```
 
@@ -65,23 +65,13 @@ const id = await auth.createPrincipal({
 
 **Returns:** The authenticated principal or null if authentication fails
 
-**Example Implementation:**
-```typescript
-public async authenticate(credentials: { login: string; password: string }): Promise<Principal | null> {
-	// Your authentication logic here
-	const principal = await this.findActivePrincipal({
-		where: { login: credentials.login }
-	});
-	
-	if (!principal) return null;
-	
-	const isValid = await this.hash.verify(
-        credentials.password,
-        principal.password_hash
-    );
-	return isValid ? principal : null;
-}
-```
+Ordinary rejection (invalid, expired, missing, inactive, or blocked credentials) returns `null`. Database, cryptographic configuration, provider transport, and other operational failures must reject with the original error. Do not use a broad catch to turn every exception into invalid credentials.
+
+APIs with a different success shape, such as OAuth2 token exchange, can throw `AuthenticationRejectedError` for expected rejection or `AuthenticationBlockedError` with `retryAfterSeconds` for a temporary block. HTTP/OAuth2 adapters translate these framework-neutral errors; the drivers do not depend on api-machine or Express.
+
+For an implementation with protection hooks, active-principal lookup, and
+post-persistence success recording, see **Step 2: Create Your Driver Class**
+below. Password hashes belong to your credential store, not the base Principal.
 
 #### 3. `findActivePrincipal(query: SelectQuery<TPrincipal>): Promise<TPrincipal | null>`
 
@@ -131,7 +121,7 @@ expect(principal).toBeNull();
 Drivers can call `beforeAuthenticationAttempt()`, `recordAuthenticationFailure()`, and `recordAuthenticationSuccess()` to integrate an `AuthenticationProtection` implementation.
 
 An `allowed: false` result means the driver must stop before looking up a principal or verifying credentials. Under the base `authenticate(): Promise<TPrincipal | null>` contract, return `null` and do not invoke either recording hook: a denied request is not a failed credential
-check. If the attempt is allowed, call exactly one of `recordAuthenticationFailure()` or `recordAuthenticationSuccess()` after the credential check.
+check. For allowed attempts, missing, inactive, or invalid credentials invoke `recordAuthenticationFailure()` once. Success invokes `recordAuthenticationSuccess()` once, after required persistence completes. Operational failures invoke neither recording hook. An existing local lockout also skips credential verification and both recording hooks.
 
 ```typescript
 public async authenticate(credentials: Credentials): Promise<Principal | null> {
@@ -156,7 +146,11 @@ public async authenticate(credentials: Credentials): Promise<Principal | null> {
 }
 ```
 
-`retryAfterSeconds` is advisory delay information, in seconds, for the caller. The base return type cannot carry it and the package does not define a lockout error. Keep `authenticate()` compatible by returning `null`; when an application must distinguish lockout from invalid credentials, capture the protection result in a driver-specific method or an authentication service and map it to a structured application response:
+`retryAfterSeconds` is advisory delay information, in seconds, for the caller.
+The base return type cannot carry it: `authenticate()` returns `null` for a
+block. Token-exchange APIs use `AuthenticationBlockedError` to retain the delay.
+An application requiring the distinction for another driver must capture the
+protection decision in its authentication service and map it at the boundary:
 
 ```typescript
 interface AuthenticationDeniedResponse {
@@ -166,7 +160,9 @@ interface AuthenticationDeniedResponse {
 }
 ```
 
-For an HTTP API, return `429 Too Many Requests`, set `Retry-After` to the same number of seconds when supplied, and use the response shape above. Avoid revealing whether the subject identifies an existing principal. Throwing an application-specific error is also valid when the framework uses centralized error handling, but it should be translated to that same external response; no specific error class is required by IAM.
+For an HTTP API, temporary blocking can map to `429 Too Many Requests` and
+`Retry-After`. OAuth2 token endpoints should use their protocol's error response.
+Avoid revealing whether the subject identifies an existing principal.
 
 #### `isActiveQuery(): undefined | Expression<TPrincipal>`
 
@@ -197,10 +193,10 @@ protected isActiveQuery(): Expression<Principal> {
 ## Properties
 
 - **`principalRepo`** (public) - QueryRepository for direct database access to principals
-- **`hash`** (protected) - Hash instance for cryptographic operations
-- **`principalTable`** (protected) - Database table name (default: `'iam_principals'`)
-- **`principalIdColumn`** (protected) - ID column name (default: `'id'`)
 - **`loginColumn`** (protected) - Login column name (default: `'login'`)
+
+The base constructor creates `principalRepo` for `iam_principals`, identified
+by `id`. It does not expose `principalTable` or `principalIdColumn` overrides.
 
 ## Building a Custom Authentication Driver
 
@@ -226,14 +222,8 @@ interface CustomPrincipal extends DatabaseRecord {
 import { Authentication } from '@riao/iam/authentication';
 import { AuthenticationOptions } from '@riao/iam/authentication';
 import { Principal } from '@riao/iam/auth';
-import { Expression } from '@riao/dbal';
 
-export class CustomAuthDriver extends Authentication<Principal> {
-	// Optional: Override default table/column names
-	protected principalTable = 'iam_principals';
-	protected principalIdColumn = 'id';
-	protected loginColumn = 'login';
-
+export abstract class CustomAuthDriver extends Authentication<Principal> {
 	constructor(options: AuthenticationOptions) {
 		super(options);
 	}
@@ -246,39 +236,47 @@ export class CustomAuthDriver extends Authentication<Principal> {
 		login: string;
 		password: string;
 	}): Promise<Principal | null> {
-		// Find the principal by login
+		const attempt = { scheme: 'custom', subject: credentials.login };
+		if (!(await this.beforeAuthenticationAttempt(attempt)).allowed) {
+			return null;
+		}
 		const principal = await this.findActivePrincipal({
 			where: { login: credentials.login }
 		});
 
 		if (!principal) {
+			await this.recordAuthenticationFailure(attempt);
 			return null;
 		}
 
 		// Verify the password (implement your own verification)
 		const isValid = await this.verifyPassword(
 			credentials.password,
-			principal.passwordHash
+			principal
 		);
 
-		return isValid ? principal : null;
+		if (!isValid) {
+			await this.recordAuthenticationFailure(attempt);
+			return null;
+		}
+		// Complete credential-specific persistence before recording success.
+		await this.persistSuccess(principal);
+		await this.recordAuthenticationSuccess(attempt);
+		return principal;
 	}
 
-	/**
-	 * Optional: Override to add custom active status logic beyond deactivation
-	 * Default implementation filters for deactivate_timestamp: null
-	 * Called automatically by findActivePrincipal()
-	 */
-	protected isActiveQuery(): Expression<Principal> {
-		return { deactivate_timestamp: null };
-	}
-
-	// Helper method (not part of base class)
-	private async verifyPassword(password: string, hash: string): Promise<boolean> {
-		return this.hash.verify(password, hash);
-	}
+	protected abstract verifyPassword(
+		password: string, principal: Principal
+	): Promise<boolean>;
+	protected abstract persistSuccess(principal: Principal): Promise<void>;
 }
 ```
+
+Implement the verifier using your credential store and supported cryptographic
+library; the IAM base class does not supply a hash service. Operational failures
+from lookup, verification, persistence, or protection must propagate. See the
+authentication template's example and isolated contract tests for a runnable
+credential-format-neutral pattern.
 
 ### Step 3: Create Migrations for Your Tables
 
@@ -366,13 +364,14 @@ export class CustomAuthMigrations {
 
 ```typescript
 import { Database } from '@riao/dbal';
+import { AuthenticationOptions } from '@riao/iam/authentication';
 import { CustomAuthDriver } from './drivers/custom-auth-driver';
 
-const db = new Database({
-	// ... database config
-});
+// Supply your initialized database and concrete credential-specific driver.
+declare const db: Database;
+declare function createAuth(options: AuthenticationOptions): CustomAuthDriver;
 
-const auth = new CustomAuthDriver({
+const auth = createAuth({
 	db,
 	authenticationProtection: {
 		beforeAttempt: async () => ({ allowed: true }),
@@ -448,26 +447,49 @@ protected isActiveQuery(): Expression<Principal> {
 ```typescript
 export interface JWTCredentials {
 	token: string;
-	issuer: string;
 }
 
 public async authenticate(credentials: JWTCredentials): Promise<Principal | null> {
+	let decoded: { sub: string };
 	try {
-		const decoded = await this.verifyJWT(credentials.token);
-		return this.findActivePrincipal({
-			where: { id: decoded.sub }
-		});
-	} catch {
-		return null;
+		decoded = await this.verifyJWT(credentials.token);
+	} catch (error) {
+		if (isTokenValidationError(error)) {
+			return null;
+		}
+		throw error;
 	}
+	return this.findActivePrincipal({ where: { id: decoded.sub } });
 }
 
-private async verifyJWT(token: string): Promise<any> {
+private async verifyJWT(token: string): Promise<{ sub: string }> {
 	// Your JWT verification logic
 }
 ```
 
+`isTokenValidationError` is exported by `@riao/crypto`. Implement `verifyJWT`
+with a supported verifier and validate claim shapes before resolving a principal.
+Issuer and audience restrictions belong to trusted verifier configuration, never
+caller-supplied credentials. Optional issuer/audience support in the shared JWT
+helper is a separate feature, not part of this core revamp. Apply the protection
+and recording lifecycle shown above around verification. Never accept an
+unverified claim as an authenticated identity.
+
+### Application integration
+
+Return the actual active principal to an api-machine authentication adapter.
+For session-based login, persist that principal (or a trusted ID subsequently
+resolved to an active principal) and expose it as `session.principal`.
+Setting only `authenticated = true` is insufficient for authorization.
+Password, magic-token, WebAuthn, and SSO login need not become OAuth2 bearer
+authentication. Provider tokens can target provider APIs, not your application.
+
 ### Pattern 4: OAuth / External Provider
+
+For authorization-code SSO callbacks, require and validate browser-bound state
+before exchanging the code. The SSO drivers require both `code` and `state`;
+provider access tokens in the generic example below are not application API
+bearer credentials.
 
 ```typescript
 export interface OAuthCredentials {
@@ -484,15 +506,24 @@ public async authenticate(credentials: OAuthCredentials): Promise<Principal | nu
 	});
 
 	if (!principal) {
+		const existing = await this.principalRepo.findOne({
+			where: { login: profile.email }
+		});
+		if (existing) {
+			return null; // Do not provision a replacement for an inactive identity.
+		}
 		const id = await this.createPrincipal({
 			login: profile.email,
 			name: profile.name,
 			type: 'user',
 		});
-		principal = await this.principalRepo.findOne({ where: { id } });
+		principal = await this.findActivePrincipal({ where: { id } });
+		if (!principal) {
+			throw new Error('Provisioned principal could not be resolved');
+		}
 	}
 
-	return principal || null;
+	return principal;
 }
 
 private async fetchProfile(provider: string, token: string): Promise<any> {
@@ -510,30 +541,48 @@ export interface MFACredentials {
 }
 
 public async authenticate(credentials: MFACredentials): Promise<Principal | null> {
-	// Verify password
+	const attempt = { scheme: 'mfa', subject: credentials.login };
+	if (!(await this.beforeAuthenticationAttempt(attempt)).allowed) {
+		return null;
+	}
+	const reject = async (): Promise<null> => {
+		await this.recordAuthenticationFailure(attempt);
+		return null;
+	};
 	const principal = await this.findActivePrincipal({
 		where: { login: credentials.login }
 	});
 
-	if (!principal) return null;
+	if (!principal) return reject();
 
-	const passwordValid = await this.hash.verify(
+	const passwordValid = await this.verifyPassword(
 		credentials.password,
-		principal.passwordHash
+		principal
 	);
 
-	if (!passwordValid) return null;
+	if (!passwordValid) return reject();
 
 	// Verify MFA code
 	const mfaValid = await this.verifyMFACode(principal.id, credentials.mfaCode);
 
-	return mfaValid ? principal : null;
+	if (!mfaValid) return reject();
+	await this.persistSuccess(principal);
+	await this.recordAuthenticationSuccess(attempt);
+	return principal;
 }
 
-private async verifyMFACode(principalId: string, code: string): Promise<boolean> {
-	// Your MFA verification logic
-}
+protected abstract verifyPassword(
+	password: string, principal: Principal
+): Promise<boolean>;
+protected abstract verifyMFACode(
+	principalId: string, code: string
+): Promise<boolean>;
+protected abstract persistSuccess(principal: Principal): Promise<void>;
 ```
+
+These are method fragments for an abstract driver. Implement the verifier and
+persistence methods in your concrete driver; operational failures must propagate
+without credential-failure recording.
 
 ## Base Migrations Structure
 
@@ -626,4 +675,3 @@ describe('Custom Auth Driver', () => {
 5. **Database flexibility** - Override table/column names to fit your schema
 6. **Soft deletes** - Use `deactivate_timestamp` instead of deleting principals
 7. **Migrations matter** - Properly structure your schema from the start
-

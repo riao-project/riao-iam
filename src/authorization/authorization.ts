@@ -3,18 +3,33 @@ import { Auth, AuthOptions, Principal } from '../auth';
 
 export type AuthorizationOptions = AuthOptions;
 
-export interface AuthorizationContext<
-	TPrincipal extends Principal = Principal,
-> {
-	principal: TPrincipal;
+export interface AuthorizationSubject {
+	id: string;
+}
+
+export interface AuthorizationRequirement {
 	resource?: string | Record<string, unknown>;
 	action: string;
 	metadata?: Record<string, unknown>;
 }
 
+export interface AuthorizationContext<
+	TSubject extends AuthorizationSubject = Principal,
+> extends AuthorizationRequirement {
+	principal: TSubject;
+}
+
 export interface AuthorizationResult {
 	allowed: boolean;
 	reason?: string;
+}
+
+export interface AuthorizationService<
+	TSubject extends AuthorizationSubject = AuthorizationSubject,
+> {
+	evaluate(
+		context: AuthorizationContext<TSubject>
+	): Promise<AuthorizationResult>;
 }
 
 export interface GrantPermissionOptions {
@@ -33,7 +48,8 @@ export interface RevokePermissionOptions {
 
 export abstract class Authorization<
 	TPrincipal extends Principal,
-> extends Auth<TPrincipal> {
+	TSubject extends AuthorizationSubject = TPrincipal,
+> extends Auth<TPrincipal> implements AuthorizationService<TSubject> {
 	/**
 	 * Evaluate authorization for a given context
 	 * @param context The authorization context containing principal,
@@ -41,7 +57,7 @@ export abstract class Authorization<
 	 * @returns Authorization result with allowed status and optional reason
 	 */
 	public abstract evaluate(
-		context: AuthorizationContext<TPrincipal>
+		context: AuthorizationContext<TSubject>
 	): Promise<AuthorizationResult>;
 
 	/**
@@ -50,7 +66,7 @@ export abstract class Authorization<
 	 * @returns True if authorized, false otherwise
 	 */
 	public async isAuthorized(
-		context: AuthorizationContext<TPrincipal>
+		context: AuthorizationContext<TSubject>
 	): Promise<boolean> {
 		const result = await this.evaluate(context);
 		return result.allowed;
@@ -64,7 +80,7 @@ export abstract class Authorization<
 	 */
 	protected async checkPermission(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		context: AuthorizationContext<TPrincipal>
+		context: AuthorizationContext<TSubject>
 	): Promise<AuthorizationResult> {
 		// Default implementation returns false
 		return {
