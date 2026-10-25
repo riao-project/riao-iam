@@ -29,7 +29,7 @@ interface Principal {
 	login: string;
 	name: string;
 	create_timestamp: Date;
-	deactivate_timestamp?: Date;
+	deactivate_timestamp: Date | null;  // null when active
 }
 ```
 
