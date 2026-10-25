@@ -390,31 +390,13 @@ await auth.revokePermission({
 
 Keep authentication and authorization separate. Use the `Authentication` class for verifying credentials and the `Authorization` class for permission checks.
 
-### 2. Cache Policy Results
+### 2. Cache Policy Results Carefully
 
-For performance-sensitive applications, cache authorization decisions with appropriate TTL:
+Authorization decisions may depend on more than the principal ID, action, and resource. Policies can also use principal attributes, resource attributes, metadata (such as tenant or request environment), and changing role or policy data. Do not use a generic cache key built from only a subset of these inputs, different contexts could collide and reuse an incorrect decision.
 
-```typescript
-private cache = new Map<string, { result: AuthorizationResult; expiry: number }>();
+If you add caching, define a cache key that represents every input used by the policy, including a stable representation of object-valued resources and tenant-specific context. Decide how changes to roles, permissions, principal status, resource attributes, or policy configuration invalidate cached results.
 
-public async evaluate(context: AuthorizationContext<Principal>): Promise<AuthorizationResult> {
-	const cacheKey = `${context.principal.id}:${context.action}:${context.resource}`;
-	const cached = this.cache.get(cacheKey);
-
-	if (cached && cached.expiry > Date.now()) {
-		return cached.result;
-	}
-
-	const result = await this.checkPermission(context);
-
-	this.cache.set(cacheKey, {
-		result,
-		expiry: Date.now() + 5 * 60 * 1000, // 5 minutes
-	});
-
-	return result;
-}
-```
+A TTL alone permits stale decisions until expiration; stale allow results can continue granting access after a permission is revoked. Choose expiration and invalidation behavior according to the application's security requirements.
 
 ### 3. Provide Detailed Reasons
 
