@@ -392,19 +392,11 @@ Keep authentication and authorization separate. Use the `Authentication` class f
 
 ### 2. Cache Policy Results Carefully
 
-Authorization decisions may depend on more than the principal ID, action, and
-resource. Policies can also use principal attributes, resource attributes,
-metadata (such as tenant or request environment), and changing role or policy
-data. Do not use a generic cache key built from only a subset of these inputs:
-different contexts could collide and reuse an incorrect decision.
+Authorization decisions may depend on more than the principal ID, action, and resource. Policies can also use principal attributes, resource attributes, metadata (such as tenant or request environment), and changing role or policy data. Do not use a generic cache key built from only a subset of these inputs, different contexts could collide and reuse an incorrect decision.
 
-If you add caching, define a cache key that represents every input used by the
-policy, including a stable representation of object-valued resources and
-tenant-specific context. Decide how changes to roles, permissions, principal
-status, resource attributes, or policy configuration invalidate cached results.
-A TTL alone permits stale decisions until expiration; stale allow results can
-continue granting access after a permission is revoked. Choose expiration and
-invalidation behavior according to the application's security requirements.
+If you add caching, define a cache key that represents every input used by the policy, including a stable representation of object-valued resources and tenant-specific context. Decide how changes to roles, permissions, principal status, resource attributes, or policy configuration invalidate cached results.
+
+A TTL alone permits stale decisions until expiration; stale allow results can continue granting access after a permission is revoked. Choose expiration and invalidation behavior according to the application's security requirements.
 
 ### 3. Provide Detailed Reasons
 
