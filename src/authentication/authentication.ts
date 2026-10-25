@@ -53,6 +53,9 @@ export abstract class Authentication<
 		return inserted.id as DatabaseRecordId;
 	}
 
+	/**
+	 * Return an active principal or null for ordinary credential rejection.
+	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public abstract authenticate(credentials: any): Promise<TPrincipal | null>;
 

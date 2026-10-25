@@ -71,7 +71,7 @@ class PasswordAuthentication extends Authentication<Principal> {
 
   // Implement the isActiveQuery if needed for custom active status logic
   protected isActiveQuery() {
-    return { where: { deactivate_timestamp: null } };
+    return { deactivate_timestamp: null };
   }
 }
 
