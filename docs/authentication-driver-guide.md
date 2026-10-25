@@ -65,13 +65,11 @@ const id = await auth.createPrincipal({
 
 **Returns:** The authenticated principal or null if authentication fails
 
-Ordinary rejection (invalid, expired, missing, inactive, or blocked credentials) returns `null`. Database, cryptographic configuration, provider transport, and other operational failures must reject with the original error. Do not use a broad catch to turn every exception into invalid credentials.
+Ordinary rejection (invalid, expired, missing, inactive, or blocked credentials) returns `null`. Database, cryptographic configuration, provider transport, and other operational failures must reject with the original error.
 
-APIs with a different success shape, such as OAuth2 token exchange, can throw `AuthenticationRejectedError` for expected rejection or `AuthenticationBlockedError` with `retryAfterSeconds` for a temporary block. HTTP/OAuth2 adapters translate these framework-neutral errors; the drivers do not depend on api-machine or Express.
+APIs with a different success shape, such as OAuth2 token exchange, can throw `AuthenticationRejectedError` for expected rejection or `AuthenticationBlockedError` with `retryAfterSeconds` for a temporary block. HTTP/OAuth2 adapters translate these framework-neutral errors.
 
-For an implementation with protection hooks, active-principal lookup, and
-post-persistence success recording, see **Step 2: Create Your Driver Class**
-below. Password hashes belong to your credential store, not the base Principal.
+For an implementation with protection hooks, active-principal lookup, and post-persistence success recording, see **Step 2: Create Your Driver Class** below.
 
 #### 3. `findActivePrincipal(query: SelectQuery<TPrincipal>): Promise<TPrincipal | null>`
 
@@ -147,10 +145,8 @@ public async authenticate(credentials: Credentials): Promise<Principal | null> {
 ```
 
 `retryAfterSeconds` is advisory delay information, in seconds, for the caller.
-The base return type cannot carry it: `authenticate()` returns `null` for a
-block. Token-exchange APIs use `AuthenticationBlockedError` to retain the delay.
-An application requiring the distinction for another driver must capture the
-protection decision in its authentication service and map it at the boundary:
+
+The base return type cannot carry it: `authenticate()` returns `null` for a block. Token-exchange APIs use `AuthenticationBlockedError` to retain the delay. An application requiring the distinction for another driver must capture the protection decision in its authentication service and map it at the boundary:
 
 ```typescript
 interface AuthenticationDeniedResponse {
@@ -160,9 +156,7 @@ interface AuthenticationDeniedResponse {
 }
 ```
 
-For an HTTP API, temporary blocking can map to `429 Too Many Requests` and
-`Retry-After`. OAuth2 token endpoints should use their protocol's error response.
-Avoid revealing whether the subject identifies an existing principal.
+For an HTTP API, temporary blocking can map to `429 Too Many Requests` and `Retry-After`. OAuth2 token endpoints should use their protocol's error response. Avoid revealing whether the subject identifies an existing principal.
 
 #### `isActiveQuery(): undefined | Expression<TPrincipal>`
 
@@ -195,8 +189,7 @@ protected isActiveQuery(): Expression<Principal> {
 - **`principalRepo`** (public) - QueryRepository for direct database access to principals
 - **`loginColumn`** (protected) - Login column name (default: `'login'`)
 
-The base constructor creates `principalRepo` for `iam_principals`, identified
-by `id`. It does not expose `principalTable` or `principalIdColumn` overrides.
+The base constructor creates `principalRepo` for `iam_principals`, identified by `id`.
 
 ## Building a Custom Authentication Driver
 
@@ -271,12 +264,6 @@ export abstract class CustomAuthDriver extends Authentication<Principal> {
 	protected abstract persistSuccess(principal: Principal): Promise<void>;
 }
 ```
-
-Implement the verifier using your credential store and supported cryptographic
-library; the IAM base class does not supply a hash service. Operational failures
-from lookup, verification, persistence, or protection must propagate. See the
-authentication template's example and isolated contract tests for a runnable
-credential-format-neutral pattern.
 
 ### Step 3: Create Migrations for Your Tables
 
@@ -445,6 +432,8 @@ protected isActiveQuery(): Expression<Principal> {
 ### Pattern 3: Custom Credential Format
 
 ```typescript
+import { isTokenValidationError } from '@riao/crypto';
+
 export interface JWTCredentials {
 	token: string;
 }
@@ -453,12 +442,15 @@ public async authenticate(credentials: JWTCredentials): Promise<Principal | null
 	let decoded: { sub: string };
 	try {
 		decoded = await this.verifyJWT(credentials.token);
-	} catch (error) {
+	}
+	catch (error) {
 		if (isTokenValidationError(error)) {
 			return null;
 		}
+
 		throw error;
 	}
+
 	return this.findActivePrincipal({ where: { id: decoded.sub } });
 }
 
@@ -467,29 +459,16 @@ private async verifyJWT(token: string): Promise<{ sub: string }> {
 }
 ```
 
-`isTokenValidationError` is exported by `@riao/crypto`. Implement `verifyJWT`
-with a supported verifier and validate claim shapes before resolving a principal.
-Issuer and audience restrictions belong to trusted verifier configuration, never
-caller-supplied credentials. Optional issuer/audience support in the shared JWT
-helper is a separate feature, not part of this core revamp. Apply the protection
-and recording lifecycle shown above around verification. Never accept an
-unverified claim as an authenticated identity.
+Implement `verifyJWT` with a supported verifier and validate claim shapes before resolving a principal.
+Issuer and audience restrictions belong to trusted verifier configuration, never caller-supplied credentials.
 
 ### Application integration
 
-Return the actual active principal to an api-machine authentication adapter.
-For session-based login, persist that principal (or a trusted ID subsequently
-resolved to an active principal) and expose it as `session.principal`.
-Setting only `authenticated = true` is insufficient for authorization.
-Password, magic-token, WebAuthn, and SSO login need not become OAuth2 bearer
-authentication. Provider tokens can target provider APIs, not your application.
+Return the actual active principal to an api-machine authentication adapter. For session-based login, persist that principal (or a trusted ID subsequently resolved to an active principal) and expose it as `session.principal`. Setting only `authenticated = true` is insufficient for authorization.
 
 ### Pattern 4: OAuth / External Provider
 
-For authorization-code SSO callbacks, require and validate browser-bound state
-before exchanging the code. The SSO drivers require both `code` and `state`;
-provider access tokens in the generic example below are not application API
-bearer credentials.
+For authorization-code SSO callbacks, require and validate browser-bound state before exchanging the code. The SSO drivers require both `code` and `state`; provider access tokens in the generic example below are not application API bearer credentials.
 
 ```typescript
 export interface OAuthCredentials {
@@ -579,10 +558,6 @@ protected abstract verifyMFACode(
 ): Promise<boolean>;
 protected abstract persistSuccess(principal: Principal): Promise<void>;
 ```
-
-These are method fragments for an abstract driver. Implement the verifier and
-persistence methods in your concrete driver; operational failures must propagate
-without credential-failure recording.
 
 ## Base Migrations Structure
 

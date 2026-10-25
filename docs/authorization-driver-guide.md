@@ -23,13 +23,8 @@ Auth<TPrincipal>
 
 The Authorization class is generic over a `TPrincipal` type, allowing you to work with any principal structure while maintaining type safety.
 
-`TPrincipal` remains the stored IAM principal. A second generic parameter,
-`TSubject`, selects the trusted subject required by the policy and defaults to
-`TPrincipal`. ID-only models can extend
-`Authorization<Principal, AuthorizationSubject>`, where `AuthorizationSubject`
-is `{ id: string }`. Attribute-based models should retain their richer subject
-type or explicitly resolve trusted attributes; never cast an ID-only request
-principal into a full database principal.
+`TPrincipal` remains the stored IAM principal. A second generic parameter, `TSubject`, selects the trusted subject required by the policy and defaults to `TPrincipal`. ID-only models can extend
+`Authorization<Principal, AuthorizationSubject>`, where `AuthorizationSubject` is `{ id: string }`. 
 
 ### Authorization Context
 
@@ -44,16 +39,9 @@ interface AuthorizationContext<TSubject extends AuthorizationSubject = Principal
 }
 ```
 
-`AuthorizationRequirement` contains the action, resource, and metadata without
-the subject. `AuthorizationService<TSubject>` exposes `evaluate(context)`.
-These contracts have no HTTP-framework dependency and are structurally
-compatible with api-machine's ID-only authorization service when `TSubject` is
-`AuthorizationSubject`. All three evaluation helpers (`evaluate`,
-`isAuthorized`, and `checkPermission`) use the same subject type.
+`AuthorizationRequirement` contains the action, resource, and metadata without the subject. `AuthorizationService<TSubject>` exposes `evaluate(context)`.
 
-Only use principals established by trusted authentication middleware or an
-application session. A principal ID supplied in a request body is not evidence
-of authentication.
+Only use principals established by trusted authentication middleware or an application session. A principal ID supplied in a request body is not evidence of authentication.
 
 ### Authorization Result
 
@@ -430,9 +418,7 @@ public async evaluate(context: AuthorizationContext<Principal>): Promise<Authori
 
 ### 3. Provide Detailed Reasons
 
-Provide client-safe reasons for denials. HTTP adapters may expose `reason` in a
-403 response. Keep exception messages, policy internals, and sensitive attributes
-in restricted server logs rather than in denial results:
+Provide client-safe reasons for denials. HTTP adapters may expose `reason` in a 403 response. Keep exception messages, policy internals, and sensitive attributes in restricted server logs rather than in denial results:
 
 ```typescript
 return {
@@ -464,11 +450,7 @@ public async evaluate(context: AuthorizationContext<Principal>): Promise<Authori
 
 ### 5. Error Handling
 
-Return `{ allowed: false }` for a genuine policy denial. Database or policy-service
-failures must reject, including through `isAuthorized()`, rather than becoming
-denials. Log them at the application boundary and preserve the original error.
-HTTP adapters distinguish missing authentication (401), denial (403), and
-unexpected operational failure (500):
+Return `{ allowed: false }` for a genuine policy denial. Database or policy-service failures must reject, including through `isAuthorized()`, rather than becoming denials. Log them at the application boundary and preserve the original error. HTTP adapters distinguish missing authentication (401), denial (403), and unexpected operational failure (500):
 
 ```typescript
 const result = await auth.evaluate(context);

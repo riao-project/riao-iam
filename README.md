@@ -201,20 +201,6 @@ const protection: AuthenticationProtection = {
 
 When `beforeAttempt()` returns `allowed: false`, the driver should skip credential verification and return `null`. See the [authentication driver guide](docs/authentication-driver-guide.md#authentication-protection-hooks) for hook behavior and recommendations for surfacing `retryAfterSeconds`.
 
-### Version 5 contracts
-
-Authentication returns an active principal or `null` for ordinary rejection;
-operational failures reject. Token-exchange APIs can use the framework-neutral
-`AuthenticationRejectedError` and `AuthenticationBlockedError` exports.
-
-Authorization returns a denial only for a genuine policy decision; operational
-failures reject. Denial reasons must be safe for client exposure.
-`Authorization<Principal, AuthorizationSubject>` supports ID-only policies
-consistently across `evaluate`, `isAuthorized`, and `checkPermission`, while
-the default subject remains the full stored principal for attribute-based
-models. `AuthorizationSubject`, `AuthorizationRequirement`, and
-`AuthorizationService` are exported without an HTTP-framework dependency.
-
 ### Advanced
 
 For detailed information on:
