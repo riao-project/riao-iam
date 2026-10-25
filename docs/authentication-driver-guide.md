@@ -351,14 +351,30 @@ export class CustomAuthMigrations {
 
 ```typescript
 import { Database } from '@riao/dbal';
-import { AuthenticationOptions } from '@riao/iam/authentication';
+import { Principal } from '@riao/iam/auth';
 import { CustomAuthDriver } from './drivers/custom-auth-driver';
 
-// Supply your initialized database and concrete credential-specific driver.
+// Supply your initialized database and auth
 declare const db: Database;
-declare function createAuth(options: AuthenticationOptions): CustomAuthDriver;
+declare function verifyPassword(
+	password: string,
+	principal: Principal
+): Promise<boolean>;
 
-const auth = createAuth({
+class ExampleCustomAuthDriver extends CustomAuthDriver {
+	protected override verifyPassword(
+		password: string,
+		principal: Principal
+	): Promise<boolean> {
+		return verifyPassword(password, principal);
+	}
+
+	protected override persistSuccess(principal: Principal): Promise<void> {
+		return persistSuccess(principal);
+	}
+}
+
+const auth = new ExampleCustomAuthDriver({
 	db,
 	authenticationProtection: {
 		beforeAttempt: async () => ({ allowed: true }),
