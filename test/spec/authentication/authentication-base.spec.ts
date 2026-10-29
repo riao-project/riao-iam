@@ -105,7 +105,7 @@ describe('Authentication - Base', () => {
 		expect(result).toEqual({ allowed: true });
 	});
 
-	it('short-circuits authentication when protection denies an attempt', async () => {
+	it('fails when protection denies an attempt', async () => {
 		const callbacks: string[] = [];
 		const protection: AuthenticationProtection = {
 			beforeAttempt: async () => {

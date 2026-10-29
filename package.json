@@ -1,6 +1,6 @@
 {
 	"name": "@riao/iam",
-	"version": "5.0.1",
+	"version": "5.0.2",
 	"description": "Identity Access Management for Riao",
 	"private": "true",
 	"typescript-template": {
