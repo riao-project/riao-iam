@@ -31,8 +31,6 @@ describe('IAM service contracts', () => {
 			return { allowed: context.principal.id === 'allowed' };
 		}
 
-		public async grantPermission(): Promise<void> {}
-		public async revokePermission(): Promise<void> {}
 	}
 
 	it('uses ID-only subjects through every evaluation surface', async () => {
@@ -56,8 +54,6 @@ describe('IAM service contracts', () => {
 			): Promise<AuthorizationResult> {
 				return { allowed: context.principal.department === 'finance' };
 			}
-			public async grantPermission(): Promise<void> {}
-			public async revokePermission(): Promise<void> {}
 		})({ db });
 		const principal: AttributePrincipal = {
 			id: 'user', login: 'user', name: 'User', type: 'user',

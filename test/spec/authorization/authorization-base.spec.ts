@@ -2,11 +2,8 @@ import {
 	Authorization,
 	AuthorizationContext,
 	AuthorizationResult,
-	GrantPermissionOptions,
-	RevokePermissionOptions,
 } from '../../../src/authorization';
 import { Principal } from '../../../src/auth';
-import { DatabaseRecordId } from '@riao/dbal';
 import { db } from '../../database';
 
 describe('Authorization - Base', () => {
@@ -22,17 +19,6 @@ describe('Authorization - Base', () => {
 				return this.checkPermission(context);
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			public async grantPermission(): Promise<void> {
-				// Mock implementation for testing
-				return Promise.resolve();
-			}
-
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			public async revokePermission(): Promise<void> {
-				// Mock implementation for testing
-				return Promise.resolve();
-			}
 		})({ db });
 
 		// Create a test principal
@@ -137,15 +123,6 @@ describe('Authorization - Base', () => {
 					return { allowed: true };
 				}
 
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				public async grantPermission(): Promise<void> {
-					return Promise.resolve();
-				}
-
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				public async revokePermission(): Promise<void> {
-					return Promise.resolve();
-				}
 			})({ db });
 
 			const isAuthorized = await auth2.isAuthorized({
@@ -166,13 +143,6 @@ describe('Authorization - Base', () => {
 					};
 				}
 
-				public async grantPermission(): Promise<void> {
-					return Promise.resolve();
-				}
-
-				public async revokePermission(): Promise<void> {
-					return Promise.resolve();
-				}
 			})({ db });
 
 			const isAuthorized = await auth2.isAuthorized({
@@ -190,13 +160,6 @@ describe('Authorization - Base', () => {
 					return { allowed: true };
 				}
 
-				public async grantPermission(): Promise<void> {
-					return Promise.resolve();
-				}
-
-				public async revokePermission(): Promise<void> {
-					return Promise.resolve();
-				}
 			})({ db });
 
 			const isAuthorized = await auth2.isAuthorized({
@@ -246,13 +209,6 @@ describe('Authorization - Base', () => {
 					return this.checkPermission(context);
 				}
 
-				public async grantPermission(): Promise<void> {
-					return Promise.resolve();
-				}
-
-				public async revokePermission(): Promise<void> {
-					return Promise.resolve();
-				}
 			})({ db });
 
 			const result = await auth2.evaluate({
@@ -262,142 +218,6 @@ describe('Authorization - Base', () => {
 
 			expect(result.allowed).toBe(false);
 			expect(result.reason).toBe('Users cannot access admin area');
-		});
-	});
-
-	describe('grantPermission', () => {
-		it('should call abstract grantPermission method', async () => {
-			let grantCalled = false;
-			const testPrincipalId = testPrincipal.id as DatabaseRecordId;
-
-			const auth2 = new (class extends Authorization<Principal> {
-				public async evaluate(): Promise<AuthorizationResult> {
-					return { allowed: true };
-				}
-
-				public async grantPermission(
-					options: GrantPermissionOptions
-				): Promise<void> {
-					const { principalId, action } = options;
-					grantCalled = true;
-					expect(principalId).toBe(testPrincipalId);
-					expect(action).toBe('edit');
-				}
-
-				public async revokePermission(): Promise<void> {
-					return Promise.resolve();
-				}
-			})({ db });
-
-			await auth2.grantPermission({
-				principalId: testPrincipalId,
-				action: 'edit',
-			});
-
-			expect(grantCalled).toBe(true);
-		});
-
-		it('should accept resource and metadata parameters', async () => {
-			let receivedResource: string | undefined;
-			let receivedMetadata: Record<string, unknown> | undefined;
-			const testPrincipalId = testPrincipal.id as DatabaseRecordId;
-
-			const auth2 = new (class extends Authorization<Principal> {
-				public async evaluate(): Promise<AuthorizationResult> {
-					return { allowed: true };
-				}
-
-				public async grantPermission(
-					options: GrantPermissionOptions
-				): Promise<void> {
-					receivedResource = options.resource;
-					receivedMetadata = options.metadata;
-				}
-
-				public async revokePermission(): Promise<void> {
-					return Promise.resolve();
-				}
-			})({ db });
-
-			await auth2.grantPermission({
-				principalId: testPrincipalId,
-				action: 'read',
-				resource: 'document_123',
-				metadata: {
-					grantedAt: new Date().toISOString(),
-				},
-			});
-
-			expect(receivedResource).toBe('document_123');
-			expect(receivedMetadata?.['grantedAt']).toBeDefined();
-		});
-	});
-
-	describe('revokePermission', () => {
-		it('should call abstract revokePermission method', async () => {
-			let revokeCalled = false;
-			const testPrincipalId = testPrincipal.id as DatabaseRecordId;
-
-			const auth2 = new (class extends Authorization<Principal> {
-				public async evaluate(): Promise<AuthorizationResult> {
-					return { allowed: true };
-				}
-
-				public async grantPermission(): Promise<void> {
-					return Promise.resolve();
-				}
-
-				public async revokePermission(
-					options: RevokePermissionOptions
-				): Promise<void> {
-					const { principalId, action } = options;
-					revokeCalled = true;
-					expect(principalId).toBe(testPrincipalId);
-					expect(action).toBe('delete');
-				}
-			})({ db });
-
-			await auth2.revokePermission({
-				principalId: testPrincipalId,
-				action: 'delete',
-			});
-
-			expect(revokeCalled).toBe(true);
-		});
-
-		it('should accept resource and metadata parameters', async () => {
-			let receivedResource: string | undefined;
-			let receivedMetadata: Record<string, unknown> | undefined;
-			const testPrincipalId = testPrincipal.id as DatabaseRecordId;
-
-			const auth2 = new (class extends Authorization<Principal> {
-				public async evaluate(): Promise<AuthorizationResult> {
-					return { allowed: true };
-				}
-
-				public async grantPermission(): Promise<void> {
-					return Promise.resolve();
-				}
-
-				public async revokePermission(
-					options: RevokePermissionOptions
-				): Promise<void> {
-					receivedResource = options.resource;
-					receivedMetadata = options.metadata;
-				}
-			})({ db });
-
-			await auth2.revokePermission({
-				principalId: testPrincipalId,
-				action: 'write',
-				resource: 'document_456',
-				metadata: {
-					revokedAt: new Date().toISOString(),
-				},
-			});
-
-			expect(receivedResource).toBe('document_456');
-			expect(receivedMetadata?.['revokedAt']).toBeDefined();
 		});
 	});
 

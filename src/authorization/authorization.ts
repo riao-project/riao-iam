@@ -1,4 +1,3 @@
-import { DatabaseRecordId } from '@riao/dbal';
 import { Auth, AuthOptions, Principal } from '../auth';
 
 export type AuthorizationOptions = AuthOptions;
@@ -30,20 +29,6 @@ export interface AuthorizationService<
 	evaluate(
 		context: AuthorizationContext<TSubject>
 	): Promise<AuthorizationResult>;
-}
-
-export interface GrantPermissionOptions {
-	principalId: DatabaseRecordId;
-	action: string;
-	resource?: string;
-	metadata?: Record<string, unknown>;
-}
-
-export interface RevokePermissionOptions {
-	principalId: DatabaseRecordId;
-	action: string;
-	resource?: string;
-	metadata?: Record<string, unknown>;
 }
 
 export abstract class Authorization<
@@ -88,22 +73,4 @@ export abstract class Authorization<
 			reason: 'No authorization model configured',
 		};
 	}
-
-	/**
-	 * Grant a permission to a principal
-	 * Subclasses should implement this based on their model
-	 * @param options The grant permission options
-	 */
-	public abstract grantPermission(
-		options: GrantPermissionOptions
-	): Promise<void>;
-
-	/**
-	 * Revoke a permission from a principal
-	 * Subclasses should implement this based on their model
-	 * @param options The revoke permission options
-	 */
-	public abstract revokePermission(
-		options: RevokePermissionOptions
-	): Promise<void>;
 }

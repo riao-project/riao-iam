@@ -95,13 +95,6 @@ class RoleBasedAuthorization extends Authorization<Principal> {
     return hasPermission;
   }
 
-  async grantPermission(options: GrantPermissionOptions): Promise<void> {
-    // Implement grant logic
-  }
-
-  async revokePermission(options: RevokePermissionOptions): Promise<void> {
-    // Implement revoke logic
-  }
 }
 
 const authz = new RoleBasedAuthorization({ db });
@@ -150,27 +143,6 @@ if (isAuthorized) {
 } else {
   console.log('Access denied');
 }
-```
-
-#### Grant Permissions
-
-```typescript
-await authz.grantPermission({
-  principalId: principal.id,
-  action: 'delete',
-  resource: 'document-123',
-  metadata: { grantedBy: 'admin', grantedAt: new Date() }
-});
-```
-
-#### Revoke Permissions
-
-```typescript
-await authz.revokePermission({
-  principalId: principal.id,
-  action: 'delete',
-  resource: 'document-123'
-});
 ```
 
 ### Authentication Protection and Lockout
