@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Authorization base class** is an abstract class that extends the `Auth` class and provides a framework for building custom authorization models. It handles permission evaluation, granting, and revoking with support for various authorization patterns like RBAC (Role-Based Access Control), ReBAC (Relationship-Based Access Control), and ABAC (Attribute-Based Access Control).
+The **Authorization base class** is an abstract class that extends the `Auth` class and provides a framework for evaluating access decisions across custom authorization models like ACL, RBAC, ReBAC, etc.
 
 ## Architecture
 
@@ -85,65 +85,9 @@ public async evaluate(
 }
 ```
 
-#### 2. `grantPermission(options: GrantPermissionOptions): Promise<void>`
-
-Grants a permission to a principal.
-
-**Options:**
-- `principalId` - The ID of the principal
-- `action` - The action to grant (e.g., 'read', 'write', 'delete')
-- `resource` - Optional resource identifier
-- `metadata` - Optional context data (when permission was granted, by whom, etc.)
-
-**Example:**
-```typescript
-public async grantPermission(
-	options: GrantPermissionOptions
-): Promise<void> {
-	const { principalId, action, resource, metadata } = options;
-	// Store the permission grant in your data store
-	await this.permissionRepo.insertOne({
-		record: {
-			principal_id: principalId,
-			action,
-			resource,
-			granted_at: new Date(),
-			...metadata,
-		},
-	});
-}
-```
-
-#### 3. `revokePermission(options: RevokePermissionOptions): Promise<void>`
-
-Revokes a permission from a principal.
-
-**Options:**
-- `principalId` - The ID of the principal
-- `action` - The action to revoke
-- `resource` - Optional resource identifier
-- `metadata` - Optional context data
-
-**Example:**
-```typescript
-public async revokePermission(
-	options: RevokePermissionOptions
-): Promise<void> {
-	const { principalId, action, resource } = options;
-	// Remove the permission from your data store
-	await this.permissionRepo.delete({
-		where: {
-			principal_id: principalId,
-			action,
-			resource,
-		},
-	});
-}
-```
-
 ### Public Methods
 
-#### 1. `isAuthorized(context: AuthorizationContext<TSubject>): Promise<boolean>`
+#### `isAuthorized(context: AuthorizationContext<TSubject>): Promise<boolean>`
 
 Convenience method that checks if a principal is authorized for an action.
 
@@ -168,7 +112,7 @@ if (isAllowed) {
 
 ### Protected Methods
 
-#### 2. `checkPermission(context: AuthorizationContext<TSubject>): Promise<AuthorizationResult>`
+#### `checkPermission(context: AuthorizationContext<TSubject>): Promise<AuthorizationResult>`
 
 Default permission checking logic. Override this in subclasses for custom authorization models.
 
@@ -203,7 +147,6 @@ protected async checkPermission(
 ```typescript
 import { Authorization, AuthorizationContext, AuthorizationResult } from './authorization';
 import { Principal } from './auth';
-import { DatabaseRecordId } from '@riao/dbal';
 
 export class RBACAuthorization extends Authorization<Principal> {
 	private rolePermissions: Map<string, Set<string>> = new Map();
@@ -232,34 +175,6 @@ export class RBACAuthorization extends Authorization<Principal> {
 		context: AuthorizationContext<Principal>
 	): Promise<AuthorizationResult> {
 		return this.checkPermission(context);
-	}
-
-	public async grantPermission(
-		options: GrantPermissionOptions
-	): Promise<void> {
-		// Implementation for RBAC
-		const { principalId, action, resource, metadata } = options;
-		const role = metadata?.role as string;
-		const permissions = this.rolePermissions.get(role) || new Set();
-		permissions.add(action);
-		this.rolePermissions.set(role, permissions);
-	}
-
-	public async revokePermission(
-		options: RevokePermissionOptions
-	): Promise<void> {
-		// Implementation for RBAC
-		const { action, metadata } = options;
-		const role = metadata?.role as string;
-		const permissions = this.rolePermissions.get(role);
-		if (permissions) {
-			permissions.delete(action);
-		}
-	}
-
-	private async getPrincipalRoles(principalId: string): Promise<string[]> {
-		// Fetch roles from database
-		return [];
 	}
 }
 ```
@@ -301,18 +216,6 @@ export class ABACAuthorization extends Authorization<Principal> {
 		context: AuthorizationContext<Principal>
 	): Promise<AuthorizationResult> {
 		return this.checkPermission(context);
-	}
-
-	public async grantPermission(
-		options: GrantPermissionOptions
-	): Promise<void> {
-		// Store policy rules
-	}
-
-	public async revokePermission(
-		options: RevokePermissionOptions
-	): Promise<void> {
-		// Remove policy rules
 	}
 
 	private async getPrincipalAttributes(principalId: string): Promise<Record<string, unknown>> {
@@ -366,23 +269,6 @@ if (!result.allowed) {
 }
 ```
 
-### Granting and Revoking Permissions
-
-```typescript
-// Grant a permission
-await auth.grantPermission({
-	principalId: userId,
-	action: 'admin_access',
-	metadata: { grantedBy: 'super_admin', grantedAt: new Date() },
-});
-
-// Revoke a permission
-await auth.revokePermission({
-	principalId: userId,
-	action: 'admin_access',
-	metadata: { revokedBy: 'super_admin', revokedAt: new Date() },
-});
-```
 
 ## Best Practices
 
@@ -453,13 +339,6 @@ class TestAuthorization extends Authorization<Principal> {
 		return this.checkPermission(context);
 	}
 
-	public async grantPermission(): Promise<void> {
-		// Mock implementation
-	}
-
-	public async revokePermission(): Promise<void> {
-		// Mock implementation
-	}
 }
 
 describe('Authorization', () => {
@@ -477,4 +356,4 @@ describe('Authorization', () => {
 
 ## Summary
 
-The Authorization base class provides a flexible foundation for implementing various authorization models. By extending it and implementing the three abstract methods, you can build authorization systems that fit your application's specific needs, whether it's RBAC, ReBAC, ABAC, or a custom combination.
+The Authorization base class provides a flexible foundation for implementing various authorization models. Implement `evaluate()` to define access decisions, and expose any management operations that fit your model on its driver or a separate capability interface.
